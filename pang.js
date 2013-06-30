@@ -1,4 +1,5 @@
-var Pang = (function(){
+angular.module('pang',[]).
+service('Pang',function($rootScope){
     var pang = {};
     pang.connections = [];
     pang.init = function(data) {
@@ -27,8 +28,8 @@ var Pang = (function(){
                             angularObject.parseObject = result;
                             angularObjects.push(angularObject);
                         }
-                        $scope.$apply(function() {
-                            $scope[conn.angularArray] = angularObjects;
+                        $rootScope.$apply(function() {
+                            $rootScope[conn.angularArray] = angularObjects;
                         });
                     },
                     error: function(error) {
@@ -46,7 +47,7 @@ var Pang = (function(){
                 });
                 var angularObject = data;
                 data.parseObject = obj;
-                $scope.jobs.push(angularObject);
+                $rootScope.jobs.push(angularObject);
             }
 
             return conn;
@@ -71,4 +72,4 @@ var Pang = (function(){
     }
 
     return pang;
-})();
+});
