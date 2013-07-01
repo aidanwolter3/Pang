@@ -12,41 +12,53 @@ service('Pang',function($rootScope){
         	//as long as the angular data store exists
         	if(newArray || oldArray) {
 
-        		//loop through every object currently in scope
-        		for(var index in newArray) {
-        			var angularObject = angularObjects[index];
+                //sending scope changes to Parse
+                for(var i in oldArray) {
+                    if(!oldArray[i].parseObject){ continue; }
 
-        			//create a new parse object and save
-        			if(!angularObject.parseObject) {
-        				var parseObject = new conn.parseObject();
-	    				parseObject.save(angularObject,{
-	    					error: function(error) {
-	    						console.log('Error, could not save: '+error);
-	    					}
-	    				});
-	    				angularObject.parseObject = parseObject;
-        			}
-        		}
+                    var found = false;
+                    for(var s in newArray) {
+                        if(!oldArray[i].parseObject) {
+                            console.log('could not find a parseobject for '+oldArray[i].company);
+                        }
 
-        		//remove all objects which no longer exist in the scope
-        		for(var index1 in oldArray) {
-        			var obj1 = oldArray[index1].parseObject;
-        			if(!obj1) {
-        				continue;
-        			}
-        			var found = false;
-        			for(var index2 in newArray) {
-        				var obj2 = newArray[index2].parseObject;
-        				if(obj1.id == obj2.id) {
-        					found = true;
-        				}
-        			}
+                        //check for new objects
+                        if(!newArray[s].parseObject) {
+                            var newParseObject = new conn.parseObject();
+                            newParseObject.save(newArray[s],{
+                                error: function(error) {
+                                    console.log('could not save parseObject with error: '+error);
+                                }
+                            });
+                            newArray[s].parseObject = newParseObject;
+                        }
+                        else if(oldArray[i].parseObject.id == newArray[s].parseObject.id) {
 
-        			//the objects wasn't found in the scope so remove it
-        			if(!found) {
-        				oldArray[index1].parseObject.destroy();
-        			}
-        		}
+                            //check for modifications
+                            for(var key in oldArray[i]) {
+                                var wasChanged = false;
+                                var newData = {};
+                                if(key != 'parseObject' && oldArray[i][key] != newArray[s][key]) {
+                                    newData[key] = newArray[s][key];
+                                    wasChanged = true;
+                                }
+                                if(wasChanged) {
+                                    newArray[s].parseObject.save(newData,{
+                                        error: function(error) {
+                                            console.log('could not save parseObject with error: '+error);
+                                        }
+                                    })
+                                }
+                            }
+                            found = true;
+                        }
+                    }
+
+                    //delete because no longer exists in scope
+                    if(!found) {
+                        oldArray[i].parseObject.destroy();
+                    }
+                }
         	};
         }, true);
 
@@ -96,6 +108,7 @@ service('Pang',function($rootScope){
             return conn;
         })();
         this.connections.push(connection);
+        this.fetch();
     }
 
     pang.fetch = function() {
