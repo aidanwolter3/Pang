@@ -46,7 +46,7 @@ function JobCtrl($scope,Pang) {
 ```
 
 Job view
-``` javascript
+``` html
 <!doctype html>
 <html ng-app="myApp">
   <head>

@@ -6,13 +6,16 @@ service('Pang',function($rootScope){
         Parse.initialize(data.appKey,data.jsKey);
     }
 
+    //creates a syncronizing connection between a Parse class and an array in the Angular scope
     pang.addConnection = function(parseClassName, angularArray) {
+
+        //sets up the watcher to check for changes in the scope
         $rootScope.$watch(angularArray,function(newArray, oldArray) {
 
         	//as long as the angular data store exists
         	if(newArray || oldArray) {
 
-                //sending scope changes to Parse
+                //determines what changes need to be synchronized to parse
                 for(var i in oldArray) {
                     if(!oldArray[i].parseObject){ continue; }
 
@@ -69,7 +72,7 @@ service('Pang',function($rootScope){
             conn.parseObject = Parse.Object.extend(parseClassName);
             conn.query = new Parse.Query(conn.parseObject);
 
-            //functions which each connection implements
+            //fetches all data from Parse class and stores is in scope
             conn.fetch = function() {
                 conn.query.find({
                     success: function(results) {
@@ -93,38 +96,10 @@ service('Pang',function($rootScope){
                 });
             }
 
-            conn.add = function(data) {
-                var obj = new conn.parseObject();
-                obj.save(data,{
-                    error: function(error) {
-                        console.log('Error, could not save: '+error)
-                    }
-                });
-                var angularObject = data;
-                data.parseObject = obj;
-                $rootScope.jobs.push(angularObject);
-            }
-
             return conn;
         })();
         this.connections.push(connection);
-        this.fetch();
-    }
-
-    pang.fetch = function() {
-        for(var index in this.connections) {
-            this.connections[index].fetch();
-        }
-    }
-
-    pang.add = function(parseClassName, data) {
-        for(var index in this.connections) {
-            connection = this.connections[index];
-            if(connection.parseClassName == parseClassName) {
-                connection.add(data);
-                break;
-            }
-        }
+        connection.fetch();
     }
 
     return pang;
