@@ -1,5 +1,5 @@
 # Pangular
-An [AngularJS](http://www.angularjs.org) module which allows for easy synchronization with [Parse.com](www.parse.com) applications.
+An [AngularJS](http://www.angularjs.org) module which allows for easy synchronization with [Parse.com](http://www.parse.com) applications.
 
 ##Usage
 Initiate Pangular with your Parse app keys.
@@ -79,4 +79,4 @@ Job view
 
 ##Dependencies
 1. [AngularJS](http://www.angularjs.org)
-2. [Parse](www.parse.com) application
+2. [Parse](http://www.parse.com) application
