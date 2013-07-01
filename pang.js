@@ -7,6 +7,49 @@ service('Pang',function($rootScope){
     }
 
     pang.addConnection = function(parseClassName, angularArray) {
+        $rootScope.$watch(angularArray,function(newArray, oldArray) {
+
+        	//as long as the angular data store exists
+        	if(newArray || oldArray) {
+
+        		//loop through every object currently in scope
+        		for(var index in newArray) {
+        			var angularObject = angularObjects[index];
+
+        			//create a new parse object and save
+        			if(!angularObject.parseObject) {
+        				var parseObject = new conn.parseObject();
+	    				parseObject.save(angularObject,{
+	    					error: function(error) {
+	    						console.log('Error, could not save: '+error);
+	    					}
+	    				});
+	    				angularObject.parseObject = parseObject;
+        			}
+        		}
+
+        		//remove all objects which no longer exist in the scope
+        		for(var index1 in oldArray) {
+        			var obj1 = oldArray[index1].parseObject;
+        			if(!obj1) {
+        				continue;
+        			}
+        			var found = false;
+        			for(var index2 in newArray) {
+        				var obj2 = newArray[index2].parseObject;
+        				if(obj1.id == obj2.id) {
+        					found = true;
+        				}
+        			}
+
+        			//the objects wasn't found in the scope so remove it
+        			if(!found) {
+        				oldArray[index1].parseObject.destroy();
+        			}
+        		}
+        	};
+        }, true);
+
         var connection = (function() {
             conn = {};
             conn.parseClassName = parseClassName;
@@ -52,7 +95,7 @@ service('Pang',function($rootScope){
 
             return conn;
         })();
-        this.connections = [connection];
+        this.connections.push(connection);
     }
 
     pang.fetch = function() {
