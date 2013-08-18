@@ -61,3 +61,40 @@ PangObject.prototype.add = function(newData) {
     }
     return promise;
 }
+
+PangObject.prototype.delete = function(parseObjectId) {
+    var pangObject = this;
+
+    var promise = {};
+    var parseObject;
+    for(var index in pangObject.parseObjects) {
+        var object = pangObject.parseObjects[index];
+        if(object.id == parseObjectId) {
+            parseObject = object;
+            break;
+        }
+    }
+
+    promise.then = function(successFtn, errorFtn) {
+        if(!parseObject) {
+            errorFtn();
+            return;
+        }
+
+        parseObject.destroy({
+            success: function() {
+            for(var index in pangObject.data) {
+                var object = pangObject.data[index];
+                if(object.parseObjectId == parseObjectId) {
+                    delete object;
+                }
+            }
+            successFtn();
+            }, 
+            error: function() {
+                errorFtn();
+            }
+        })
+    }
+    return promise;
+}
