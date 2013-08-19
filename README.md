@@ -32,7 +32,7 @@ function PangTestCtrl($scope, PangObject) {
 			console.log('Deleted object');
 			$scope.$apply();
 		}, function() {
-			console.lof('Error deleting object!');
+			console.log('Error deleting object!');
 		});
 	}
 
