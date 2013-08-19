@@ -30,7 +30,7 @@ function PangTestCtrl($scope, PangObject) {
 		numberOfObjects = numberOfObjects + 1;
 		$scope.objects.add({name: numberOfObjects.toString()}).then(function() {
 			console.log('Object added');
-			$scope.$apply()
+			$scope.$apply();
 		}, function() {
 			console.log('Error adding object!');
 		});
