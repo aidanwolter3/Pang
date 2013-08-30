@@ -12,6 +12,23 @@ function ObjectCtrl($scope, PangObject) {
 }
 ```
 
+Initialize a new Pang object with a connection to a Parse table
+``` javascript
+$scope.objects = PangObject.new('ParseTable');
+$scope.objects.initialize();
+```
+
+Add object
+``` javascript
+$scope.objects.add({name: 'Object Name'});
+```
+
+Delete object
+``` javascript
+var objectToDelete = $scope.objects[0];
+$scope.objects.delete(objectToDelete);
+```
+
 ##Example
 Controller
 ``` javascript
@@ -20,7 +37,7 @@ function PangTestCtrl($scope, PangObject) {
 	var numberOfObjects = 0;
 
 	//initialize the PangObject
-	$scope.objects = PangObject.new('Snippet');
+	$scope.objects = PangObject.new('ObjectTable');
 	$scope.objects.initialize().then(function() {
 		$scope.$apply();
 		numberOfObjects = $scope.objects.data.length;
@@ -63,6 +80,12 @@ View
 		<td ng-click="addObject()" style="color: darkgrey">Add Object...</td>
 	</tr>
 </table>
+```
+
+##Todo
+Update data to and from Parse
+``` javascript
+$scope.objects.update();
 ```
 
 ##Dependencies
