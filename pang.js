@@ -10,12 +10,18 @@ service('PangObject', function() {
             return;
         }
 
+        //verify that JQuery is included
+        if(typeof $ == 'undefined') {
+          console.log('Error: Pang needs JQuery to be included!');
+          return;
+        }
+
         pangObject.initialize = function() {
             var pangObject = this;
             pangObject.data = [];
             pangObject.parseObjects = [];
 
-            
+
             var parseObject = Parse.Object.extend(this.className);
             var query = new Parse.Query(parseObject);
 
@@ -71,7 +77,7 @@ service('PangObject', function() {
                 success: function(object) {
                     pangObject.data.push($.extend({parseObjectId: object.id}, object.attributes));
                     pangObject.parseObjects.push(object);
-                    if(successFtn) { 
+                    if(successFtn) {
                         successFtn(object.id);
                     }
                 },
@@ -132,7 +138,7 @@ service('PangObject', function() {
                     successFtn();
                 }
 
-                }, 
+                },
                 error: function() {
                     if(errorFtn) {
                         errorFtn();
