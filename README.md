@@ -25,7 +25,7 @@ $scope.objects.add({name: 'Object Name'});
 
 Delete object
 ``` javascript
-var objectToDelete = $scope.objects[0];
+var objectToDelete = $scope.objects.data[0];
 $scope.objects.delete(objectToDelete);
 ```
 
