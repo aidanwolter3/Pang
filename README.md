@@ -29,6 +29,13 @@ var objectToDelete = $scope.objects.data[0];
 $scope.objects.delete(objectToDelete);
 ```
 
+Update object
+``` javascript
+var objectToUpdate = $scope.objects.data[0];
+objectToUpdate.attribute = value;
+$scope.objects.update(objectToUpdate);
+```
+
 ##Example
 Controller
 ``` javascript
@@ -43,25 +50,22 @@ function PangTestCtrl($scope, PangObject) {
 		numberOfObjects = $scope.objects.data.length;
 	});
 
-	//deleting data
+	//delete an object
 	$scope.deleteObject = function(object) {
-		$scope.objects.delete(object).then(function() {
-			console.log('Deleted object');
-			$scope.$apply();
-		}, function() {
-			console.log('Error deleting object!');
-		});
+		$scope.objects.delete(object);
+		numberOfObjects = numberOfObjects - 1;
 	}
 
-	//adding data
+	//add an object
 	$scope.addObject = function() {
+		$scope.objects.add({name: numberOfObjects.toString()});
 		numberOfObjects = numberOfObjects + 1;
-		$scope.objects.add({name: numberOfObjects.toString()}).then(function() {
-			console.log('Object added');
-			$scope.$apply();
-		}, function() {
-			console.log('Error adding object!');
-		});
+	}
+
+	//update the object
+	$scope.updateObject = function(object) {
+		object.name = $scope.newText;
+		$scope.objects.update(object);
 	}
 }
 ```
@@ -69,23 +73,38 @@ function PangTestCtrl($scope, PangObject) {
 View
 ``` html
 <!-- a table which lists all data in the pangObject data array -->
-<table class="table table-striped table-bordered table-condensed table-hover">
+<table>
 	<tr>
-		<th>Objects</th>
+		<th>Objects:</th>
 	</tr>
 	<tr ng-repeat="object in objects.data">
-		<td ng-click="deleteObject(object)">{{object.name}}</td>
-	</tr>
-	<tr>
-		<td ng-click="addObject()" style="color: darkgrey">Add Object...</td>
+		<td>{{object.name}}</td>
+		<td>
+			<button class="btn-small btn-primary"
+			        ng-click="updateObject(object)">update</button>
+			<button class="btn-small btn-danger"
+			        ng-click="deleteObject(object)">delete</button>
+		</td>
 	</tr>
 </table>
+
+<input ng-model="newText" placeholder="update text...">
+<hr>
+<button class="btn" ng-click="addObject()">New Object</button>
 ```
 
 ##Todo
-Update data to and from Parse
+**updateAll( )** data to and from Parse.
 ``` javascript
-$scope.objects.update();
+$scope.objects.updateAll();
+```
+
+**update( )** data in both directions (to and from Parse).
+Also, using the timestamps, determine whether the local object or the object in Parse
+is the most up-to-date. Update the object in both directions according to the
+most up-to-date data.
+``` javascript
+$scope.objects[0].update();
 ```
 
 ##Dependencies

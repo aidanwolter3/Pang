@@ -27,11 +27,17 @@ function PangTestCtrl($scope, PangObject) {
 
 	//delete the object
 	$scope.deleteObject = function(object) {
+
 		$scope.objects.delete(object).then(function() {
 			console.log('Deleted object');
+
+			//remove item for checking up to date
 			delete $scope.upToDate[numberOfObjects-1];
+
 			numberOfObjects = numberOfObjects - 1;
 			$scope.$apply();
+
+		//error
 		}, function() {
 			console.log('Error deleting object!');
 		});
@@ -39,11 +45,17 @@ function PangTestCtrl($scope, PangObject) {
 
 	//add a new object
 	$scope.addObject = function() {
+
 		$scope.objects.add({name: numberOfObjects.toString()}).then(function() {
 			console.log('Object added');
+
+			//add a new item for checking up to date
 			$scope.upToDate[numberOfObjects] = true;
+
 			numberOfObjects = numberOfObjects + 1;
 			$scope.$apply();
+
+		//error
 		}, function() {
 			console.log('Error adding object!');
 		});
@@ -51,12 +63,22 @@ function PangTestCtrl($scope, PangObject) {
 
 	//update the object
 	$scope.updateObject = function($index, object) {
+
+		//set not up to date
 		$scope.upToDate[$index] = false;
+
+		//update the local data
 		object.name = $scope.newText;
+
+		//update the Parse data
 		$scope.objects.update(object).then(function() {
-			$scope.upToDate[$index] = true;
 			console.log('Updated Object');
+
+			//set is up to date
+			$scope.upToDate[$index] = true;
 			$scope.$apply();
+
+		//error
 		}, function() {
 			console.log('Error updating object!');
 		});

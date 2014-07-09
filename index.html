@@ -27,14 +27,23 @@
 			<th>Up to date?</th>
 			<th>Objects:</th>
 		</tr>
+
+		<!-- for every object -->
 		<tr ng-repeat="object in objects.data">
+
+			<!-- display whether up to date or not -->
 			<td ng-if="upToDate[$index]">&#x2713;</td>
 			<td ng-if="!upToDate[$index]">&#x2717;</td>
+
+			<!-- display the object -->
 			<td style="width: 20em; text-align:center">{{object.name}}</td>
+
+			<!-- give some controls -->
 			<td>
 				<button class="btn-small btn-primary" ng-click="updateObject($index, object)">update</button>
 				<button class="btn-small btn-danger" ng-click="deleteObject(object)">delete</button>
 			</td>
+			
 		</tr>
 	</table>
 
