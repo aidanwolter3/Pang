@@ -13,26 +13,53 @@ function PangTestCtrl($scope, PangObject) {
 	//initialize the PangObject
 	$scope.objects = PangObject.new('Snippet');
 	$scope.objects.initialize().then(function() {
-		$scope.$apply();
 		numberOfObjects = $scope.objects.data.length;
+
+		//whether each cell is up to date with the server
+		$scope.upToDate = [];
+		for(var i = 0; i < numberOfObjects; i++) {
+			$scope.upToDate[i] = true;
+		}
+
+		//update the screen with the checkmarks and data
+		$scope.$apply();
 	});
 
+	//delete the object
 	$scope.deleteObject = function(object) {
 		$scope.objects.delete(object).then(function() {
 			console.log('Deleted object');
+			delete $scope.upToDate[numberOfObjects-1];
+			numberOfObjects = numberOfObjects - 1;
 			$scope.$apply();
 		}, function() {
 			console.log('Error deleting object!');
 		});
 	}
 
+	//add a new object
 	$scope.addObject = function() {
-		numberOfObjects = numberOfObjects + 1;
 		$scope.objects.add({name: numberOfObjects.toString()}).then(function() {
 			console.log('Object added');
+			$scope.upToDate[numberOfObjects] = true;
+			numberOfObjects = numberOfObjects + 1;
 			$scope.$apply();
 		}, function() {
 			console.log('Error adding object!');
 		});
 	}
+
+	//update the object
+	$scope.updateObject = function($index, object) {
+		$scope.upToDate[$index] = false;
+		object.name = $scope.newText;
+		$scope.objects.update(object).then(function() {
+			$scope.upToDate[$index] = true;
+			console.log('Updated Object');
+			$scope.$apply();
+		}, function() {
+			console.log('Error updating object!');
+		});
+	}
+
 }
