@@ -3,6 +3,8 @@ service('PangObject', function() {
     this.new = function(className) {
         var pangObject = {};
         pangObject.className = className;
+        pangObject.sortKey = null;
+        pangObject.sortFunction = null;
 
         //verify that the parse file is included
         if(typeof Parse == 'undefined') {
@@ -39,10 +41,11 @@ service('PangObject', function() {
                 success: function(objects) {
                     for(var index in objects) {
                         object = objects[index];
-                        dataObject = $.extend({parseObjectId: object.id}, object.attributes);
+                        dataObject = $.extend({parseObjectId: object.id, updatedAt: object.updatedAt}, object.attributes);
                         pangObject.parseObjects.push(object);
                         pangObject.data.push(dataObject);
                     }
+                    pangObject.orderObjects();
                     if(successFtn) {
                         successFtn();
                     }
@@ -75,11 +78,16 @@ service('PangObject', function() {
             //save the new data
             newParseObject.save(newData, {
                 success: function(object) {
-                    pangObject.data.push($.extend({parseObjectId: object.id}, object.attributes));
-                    pangObject.parseObjects.push(object);
-                    if(successFtn) {
-                        successFtn(object.id);
-                    }
+                  
+                  //change the updatedAt to the correct format
+                  object.updatedAt = object.updatedAt.toISOString();
+
+                  pangObject.data.push($.extend({parseObjectId: object.id, updatedAt: object.updatedAt}, object.attributes));
+                  pangObject.parseObjects.push(object);
+                  pangObject.orderObjects();
+                  if(successFtn) {
+                    successFtn(object.id);
+                  }
                 },
                 error: function(error) {
                     if(errorFtn) {
@@ -134,6 +142,7 @@ service('PangObject', function() {
                     }
                 }
                 pangObject.parseObjects.splice(parseObjectIndex, 1);
+                pangObject.orderObjects();
                 if(successFtn) {
                     successFtn();
                 }
@@ -194,10 +203,14 @@ service('PangObject', function() {
             //save the updates
             parseObject.save(null, {
                 success: function() {
-                if(successFtn) {
-                    successFtn();
-                }
 
+                  //change the updatedAt to the correct format
+                  object.updatedAt = parseObject.updatedAt.toISOString();
+
+                  pangObject.orderObjects();
+                  if(successFtn) {
+                      successFtn();
+                  }
                 },
                 error: function() {
                     if(errorFtn) {
@@ -208,6 +221,19 @@ service('PangObject', function() {
 
             return promise;
         }
+
+        pangObject.orderObjects = function() {
+            if(pangObject.sortFunction) {
+                pangObject.data.sort(function(a, b) {
+                  return pangObject.sortFunction(a, b);
+                });
+            }
+            else if(pangObject.sortKey) {
+                pangObject.data.sort(function(a, b) {
+                    return b[pangObject.sortKey] > a[pangObject.sortKey] ? 1 : -1;
+                });
+            }
+        };
 
         return pangObject;
     }

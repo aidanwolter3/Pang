@@ -36,6 +36,19 @@ objectToUpdate.attribute = value;
 $scope.objects.update(objectToUpdate);
 ```
 
+Sort the objects
+``` javascript
+$scope.objects.sortKey = 'updatedAt';
+
+ OR
+
+$scope.objects.sortFunction = function(a, b) {
+	a = a['name'].toLowerCase();
+	b = b['name'].toLowerCase();
+	return a > b ? 1 : -1;
+}
+```
+
 ##Example
 Controller
 ``` javascript
