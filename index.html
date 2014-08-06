@@ -29,7 +29,7 @@
 		</tr>
 
 		<!-- for every object -->
-		<tr ng-repeat="object in objects.data">
+		<tr ng-repeat="object in objects">
 
 			<!-- display whether up to date or not -->
 			<td ng-if="upToDate[$index]">&#x2713;</td>
@@ -40,14 +40,14 @@
 
 			<!-- give some controls -->
 			<td>
-				<button class="btn-small btn-primary" ng-click="updateObject($index, object)">update</button>
-				<button class="btn-small btn-danger" ng-click="deleteObject(object)">delete</button>
+				<button class="btn-small btn-primary" ng-click="updateObject($index)">update</button>
+				<button class="btn-small btn-danger" ng-click="deleteObject($index)">delete</button>
 			</td>
 			
 		</tr>
 	</table>
 
-	<input ng-model="newText" placeholder="update text...">
+	<input ng-model="inputText" placeholder="new / update title...">
 	<hr>
 	<button class="btn" ng-click="addObject()">New Object</button>
 </body>

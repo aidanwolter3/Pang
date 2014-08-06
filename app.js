@@ -1,87 +1,33 @@
-//These tests will require a parse table with a column named 'name'
+//These tests will require a parse table with a column 'name'
 //You will have to fill in your own appId and jsKey into the Parse.initialize function
 
 
 //the main app
-var pangTest = angular.module('pangTest', ['ngResource', 'pang']);
+var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
 
 //the controller for the tests
-function PangTestCtrl($scope, PangObject) {
-	Parse.initialize('yourAppId','yourJsKey');
-	var numberOfObjects = 0;
+.controller('PangTestCtrl', function($scope, pang) {
 
-	//initialize the PangObject
-	$scope.objects = PangObject.new('Snippet');
-	$scope.objects.initialize().then(function() {
-		numberOfObjects = $scope.objects.data.length;
+	//initialize the Pang Object
+  pang.initialize('GqBCNGLwUKpoq8CW3zhV8Q2bDovMsHsPPUaYYW8F','19QUZxLzX8bZSZ4IGpOkfSWvQUGdnU38e4Dih5Pm');
 
-		//whether each cell is up to date with the server
-		$scope.upToDate = [];
-		for(var i = 0; i < numberOfObjects; i++) {
-			$scope.upToDate[i] = true;
-		}
+  //create the snippet table and populate
+  $scope.objects = pang.Table('Snippet', {autoSync: true});
 
-		//update the screen with the checkmarks and data
-		$scope.$apply();
-	});
-
-	//delete the object
-	$scope.deleteObject = function(object) {
-
-		$scope.objects.delete(object).then(function() {
-			console.log('Deleted object');
-
-			//remove item for checking up to date
-			delete $scope.upToDate[numberOfObjects-1];
-
-			numberOfObjects = numberOfObjects - 1;
-			$scope.$apply();
-
-		//error
-		}, function() {
-			console.log('Error deleting object!');
-		});
+  //delete the object
+	$scope.deleteObject = function($index) {
+    $scope.objects.splice($index, 1);
 	}
 
 	//add a new object
 	$scope.addObject = function() {
-
-		$scope.objects.add({name: numberOfObjects.toString()}).then(function() {
-			console.log('Object added');
-
-			//add a new item for checking up to date
-			$scope.upToDate[numberOfObjects] = true;
-
-			numberOfObjects = numberOfObjects + 1;
-			$scope.$apply();
-
-		//error
-		}, function() {
-			console.log('Error adding object!');
-		});
-	}
+    $scope.objects.push({name: $scope.inputText});
+ 	}
 
 	//update the object
-	$scope.updateObject = function($index, object) {
-
-		//set not up to date
-		$scope.upToDate[$index] = false;
-
-		//update the local data
-		object.name = $scope.newText;
-
-		//update the Parse data
-		$scope.objects.update(object).then(function() {
-			console.log('Updated Object');
-
-			//set is up to date
-			$scope.upToDate[$index] = true;
-			$scope.$apply();
-
-		//error
-		}, function() {
-			console.log('Error updating object!');
-		});
+	$scope.updateObject = function($index) {
+    var object = $scope.objects[$index];
+    object.name = $scope.inputText;
 	}
 
-}
+});

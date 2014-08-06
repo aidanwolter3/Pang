@@ -1,240 +1,363 @@
-angular.module('pang', []).
-service('PangObject', function() {
-    this.new = function(className) {
-        var pangObject = {};
-        pangObject.className = className;
-        pangObject.sortKey = null;
-        pangObject.sortFunction = null;
+angular.module('pang', []).factory('pang', function($rootScope) {
+  return {
 
-        //verify that the parse file is included
-        if(typeof Parse == 'undefined') {
-            console.log('Error: Pang needs the Parse SDK to be included!');
-            return;
+
+    /*****************************************************************
+     *
+     * pang.initialize(appId, jsKey)
+     *
+     *  Initialize pang object
+     *
+     ****************************************************************/
+    initialize: function(appId, jsKey) {
+
+      //create the hash for all tables the user uses
+      $rootScope.pangTables = {};
+
+      //create the hash for all the arrays corresponding to the tables
+      $rootScope.pangArrays = {};
+
+      //initialize Parse
+      Parse.initialize(appId, jsKey);
+
+    }, // pang.initialize()
+
+
+    /*****************************************************************
+     *
+     * pang.Table('tableName')
+     *
+     *  Create array from Parse table which contains convenient methods
+     *
+     ****************************************************************/
+    Table: function(__className__, options, promise) {
+      var table = Parse.Object.extend(__className__);
+      $rootScope.pangTables[__className__] = table;
+      $rootScope.pangArrays[__className__] = array = [];
+      array.__className__ = __className__;
+      array.__autoSync__ = false;   // do not auto sync by default
+      array.__syncInterval__ = 5000;// 5 second auto sync interval by default
+
+      if(options) {
+        if(options.autoSync) {
+          array.__autoSync__ = options.autoSync;
+        }
+        if(options.syncInterval) {
+          array.__syncInterval__ = options.syncInterval;
+        }
+      }
+
+      //fetch all the objects from Parse and convert them to array
+      var query = new Parse.Query(table);
+      query.find({
+
+        //successfully connected, so convert to array
+        success: function(objects) {
+
+          //convert to array
+          for(var i = 0; i < objects.length; i++) {
+            var object = {};
+            for(attrKey in objects[i].attributes) {
+              object[attrKey] = objects[i].get(attrKey);
+            }
+            object.__parseObjectId__ = objects[i].id;
+            array[i] = object;
+          }
+
+          //apply the changes
+          $rootScope.$apply();
+
+          //call the promises' success callback
+          if(promise && promise.success) {
+            promise.success(array);
+          }
+        },
+
+        //error, so call the promises' error callback
+        error: function(error) {
+          if(promise && promise.error) {
+            promise.error(error);
+          }
+        }
+      });
+
+
+      /*****************************************************************
+       *
+       * addParseObject(object, promise)
+       *
+       *  Add a new object to Parse
+       *
+       ****************************************************************/
+      var addParseObject = function(object, promise) {
+
+        //get the table and create a bare object
+        var table = $rootScope.pangTables[array.__className__];
+        var parseObject = new table();
+
+        //fill the object will all the correct attributes
+        for(attrKey in object) {
+          parseObject.set(attrKey, object[attrKey]);
         }
 
-        //verify that JQuery is included
-        if(typeof $ == 'undefined') {
-          console.log('Error: Pang needs JQuery to be included!');
+        //save the new object to Parse
+        parseObject.save(null, {
+
+          //success so call the promise
+          success: function(parseObject) {
+            object.__parseObjectId__ = parseObject.id;
+            if(promise && promise.success) {
+              promise.success(parseObject);
+            }
+          },
+
+          //error so call the promise
+          error: function(error) {
+            if(promise && promise.error) {
+              promise.error(error);
+            }
+          }
+        });
+
+      } // addParseObject()
+
+
+      /*****************************************************************
+       *
+       * deleteParseObject(object, promise)
+       *
+       *  Delete the object in Parse
+       *
+       ****************************************************************/
+      var deleteParseObject = function(object, promise) {
+
+        //get the object's table and the parseObject
+        var table = $rootScope.pangTables[array.__className__];
+        var query = new Parse.Query(table);
+        query.get(object.__parseObjectId__, {
+
+          //found the parseObject so try to delete
+          success: function(parseObject) {
+            parseObject.destroy({
+              
+              //successfully delete, so call promise
+              success: function() {
+                if(promise && promise.success) {
+                  promise.success();
+                }
+              },
+
+              //error deleteing, so call promise
+              error: function(error) {
+                if(promise && promise.error) {
+                  promise.error(error);
+                }
+              }
+            });
+          },
+
+          //could not find parseObject so call promise
+          error: function(error) {
+            if(promise && promise.error) {
+              promise.error(error);
+            }
+          }
+
+        });
+
+      } // deleteParseObject()
+
+
+      /*****************************************************************
+       *
+       * updateParseObject(object, promise)
+       *
+       *  Update Parse with the current data in the object
+       *
+       ****************************************************************/
+      var updateParseObject = function(object, promise) {
+
+        //get the table and the Parse object
+        var table = $rootScope.pangTables[array.__className__];
+        var query = new Parse.Query(table);
+        query.get(object.__parseObjectId__, {
+
+          //found the parseObject so try to delete
+          success: function(parseObject) {
+
+            //fill the object will all the correct attributes
+            for(attrKey in object) {
+              if(parseObject.get(attrKey)) {
+                parseObject.set(attrKey, object[attrKey]);
+              }
+            }
+
+            //save the new object to Parse
+            parseObject.save(null, {
+
+              //success so call the promise
+              success: function(parseObject) {
+                if(promise && promise.success) {
+                  promise.success(parseObject);
+                }
+              },
+
+              //error so call the promise
+              error: function(error) {
+                if(promise && promise.error) {
+                  promise.error(error);
+                }
+              }
+            });
+          },
+
+          //could not find parseObject so call promise
+          error: function(error) {
+            if(promise && promise.error) {
+              promise.error(error);
+            }
+          }
+        });
+
+      } // updateParseObject()
+
+
+      /*****************************************************************
+       *
+       * Table.add(object, promise)
+       *
+       *  Add a new object and update on Parse
+       *
+       ****************************************************************/
+      array.add = function(object, promise) {
+
+        addParseObject(object, promise);
+        array.push(object);
+
+      } // array.add()
+
+
+      /*****************************************************************
+       *
+       * Table.delete(object, promise)
+       *
+       *  Delete an object and remove from Parse
+       *
+       ****************************************************************/
+      array.delete = function(object, promise) {
+
+        deleteParseObject(object, promise);
+        array.splice(array.indexOf(object), 1);
+
+      } // array.delete()
+
+
+      /*****************************************************************
+       *
+       * Table.update(object, promise)
+       *
+       *  Update the object and save to Parse
+       *
+       ****************************************************************/
+      array.update = function(object, promise) {
+
+        updateParseObject(object, promise);
+
+      } // array.update()
+
+
+      /*****************************************************************
+       *
+       * Table.sync(promise)
+       *
+       *  Sync all changes to Parse
+       *
+       ****************************************************************/
+      array.sync = function(promise) {
+        
+        //get the corresponding table
+        //var table = $rootScope.pangTables[array.__className__];
+
+      } // array.sync()
+
+
+      /*****************************************************************
+       *
+       * Watch deep changes in array and sync them
+       *
+       ****************************************************************/
+      $rootScope.$watch('pangArrays.'+__className__, function(newArray, oldArray) {
+
+        //if not in autoSyncMode then return
+        if(array.__autoSync__ == false) {
           return;
         }
 
-        pangObject.initialize = function() {
-            var pangObject = this;
-            pangObject.data = [];
-            pangObject.parseObjects = [];
+        //item added
+        if(oldArray.length < newArray.length) {
 
+          //take the difference to find the added object(s)
+          var adds = newArray.filter(function(i) {return i.__parseObjectId__ == null});
 
-            var parseObject = Parse.Object.extend(this.className);
-            var query = new Parse.Query(parseObject);
-
-            //set up the promise
-            var promise = {};
-            var successFtn;
-            var errorFtn;
-            promise.then = function(s, e) {
-                successFtn = s;
-                errorFtn = e;
-            }
-
-            //get all the objects from parse
-            query.find({
-                success: function(objects) {
-                    for(var index in objects) {
-                        object = objects[index];
-                        dataObject = $.extend({parseObjectId: object.id, updatedAt: object.updatedAt}, object.attributes);
-                        pangObject.parseObjects.push(object);
-                        pangObject.data.push(dataObject);
-                    }
-                    pangObject.orderObjects();
-                    if(successFtn) {
-                        successFtn();
-                    }
-                },
-                error: function(error) {
-                    console.log('Pang encountered an error while fetching data from Parse!');
-                    if(errorFtn) {
-                        errorFtn();
-                    }
-                }
+          //add all the new objects to Parse and add the parseObjectIds to the array's objects
+          for(var i = 0; i < adds.length; i++) {
+            addParseObject(adds[i], {
+              error: function(error) { console.log('Error adding a new Parse object!'); }
             });
+          }
 
-            return promise;
-        }
+        //item deleted
+        } else if(oldArray.length > newArray.length) {
 
-        pangObject.add = function(newData) {
-            var pangObject = this;
-            var parseObject = Parse.Object.extend(this.className);
-            var newParseObject = new parseObject;
-
-            //set up the promise
-            var promise = {};
-            var successFtn;
-            var errorFtn;
-            promise.then = function(s, e) {
-                successFtn = s;
-                errorFtn = e;
+          //take the difference to find the removed object(s)
+          var rms = oldArray.filter(function(i) {
+            for(var j = 0; j < newArray.length; j++) {
+              if( i.__parseObjectId__ && newArray[j].__parseObjectId__ == i.__parseObjectId__) {
+                return false;
+              }
             }
+            return true && i.__parseObjectId__;
+          });
 
-            //save the new data
-            newParseObject.save(newData, {
-                success: function(object) {
-                  
-                  //change the updatedAt to the correct format
-                  object.updatedAt = object.updatedAt.toISOString();
-
-                  pangObject.data.push($.extend({parseObjectId: object.id, updatedAt: object.updatedAt}, object.attributes));
-                  pangObject.parseObjects.push(object);
-                  pangObject.orderObjects();
-                  if(successFtn) {
-                    successFtn(object.id);
-                  }
-                },
-                error: function(error) {
-                    if(errorFtn) {
-                        errorFtn();
-                    }
-                }
+          //delete all the Parse objects no longer in the array
+          for(var i = 0; i < rms.length; i++) {
+            deleteParseObject(rms[i], {
+              error: function(error) { console.log('Error deleting the Parse object!'); }
             });
+          }
 
-            return promise;
+        //item changed but not added or deleted
+        } else {
+
+          //update every object that has changed
+          for(var i = 0; i < oldArray.length; i++) {
+            if(angular.equals(oldArray[i], newArray[i]) == false) {
+              updateParseObject(newArray[i], {
+                error: function(error) { console.log('Error updating the Parse object!'); }
+              });
+            }
+          }
         }
 
-        pangObject.delete = function(object) {
-            var parseObjectId = object.parseObjectId;
-            var pangObject = this;
+      }, true); // $rootScope.$watch()
 
-            //find the parseObject
-            var parseObject;
-            var parseObjectIndex;
-            for(var index in pangObject.parseObjects) {
-                var object = pangObject.parseObjects[index];
-                if(object.id == parseObjectId) {
-                    parseObjectIndex = index;
-                    parseObject = object;
-                    break;
-                }
-            }
+      return array;
 
-            //set up the promise
-            var promise = {};
-            var successFtn;
-            var errorFtn;
-            promise.then = function(s, e) {
-                successFtn = s;
-                errorFtn = e;
-            }
+    }, // pang.Table()
 
-            //if the parseObject could not be found
-            if(!parseObject) {
-                if(errorFtn) {
-                    errorFtn();
-                }
-                return;
-            }
 
-            //destroy the data
-            parseObject.destroy({
-                success: function() {
-                for(var index in pangObject.data) {
-                    var object = pangObject.data[index];
-                    if(object.parseObjectId == parseObjectId) {
-                        pangObject.data.splice(index, 1);
-                    }
-                }
-                pangObject.parseObjects.splice(parseObjectIndex, 1);
-                pangObject.orderObjects();
-                if(successFtn) {
-                    successFtn();
-                }
+    /*****************************************************************
+     *
+     * pang.User()
+     *
+     *  Create a new user in Parse
+     *
+     ****************************************************************/
+    User: function() {
+      return Parse.User();
 
-                },
-                error: function() {
-                    if(errorFtn) {
-                        errorFtn();
-                    }
-                }
-            })
-
-            return promise;
-        }
-
-        pangObject.update = function(object) {
-            var parseObjectId = object.parseObjectId;
-            var pangObject = this;
-
-            //find the parseObject
-            var parseObject;
-            var parseObjectIndex;
-            for(var index in pangObject.parseObjects) {
-                var object2 = pangObject.parseObjects[index];
-                if(object2.id == parseObjectId) {
-                    parseObjectIndex = index;
-                    parseObject = object2;
-                    break;
-                }
-            }
-
-            //set up the promise
-            var promise = {};
-            var successFtn;
-            var errorFtn;
-            promise.then = function(s, e) {
-                successFtn = s;
-                errorFtn = e;
-            }
-
-            //if the parseObject could not be found
-            if(!parseObject) {
-                if(errorFtn) {
-                    errorFtn();
-                }
-                return;
-            }
-
-            //update the data
-            for(var key in object) {
-
-                //only update the keys which can be found in the attributes
-                if(parseObject.attributes[key]) {
-                    parseObject.set(key, object[key]);
-                }
-            }
-
-            //save the updates
-            parseObject.save(null, {
-                success: function() {
-
-                  //change the updatedAt to the correct format
-                  object.updatedAt = parseObject.updatedAt.toISOString();
-
-                  pangObject.orderObjects();
-                  if(successFtn) {
-                      successFtn();
-                  }
-                },
-                error: function() {
-                    if(errorFtn) {
-                        errorFtn();
-                    }
-                }
-            });
-
-            return promise;
-        }
-
-        pangObject.orderObjects = function() {
-            if(pangObject.sortFunction) {
-                pangObject.data.sort(function(a, b) {
-                  return pangObject.sortFunction(a, b);
-                });
-            }
-            else if(pangObject.sortKey) {
-                pangObject.data.sort(function(a, b) {
-                    return b[pangObject.sortKey] > a[pangObject.sortKey] ? 1 : -1;
-                });
-            }
-        };
-
-        return pangObject;
-    }
+    } // pang.User()
+  }
 });
+
+
