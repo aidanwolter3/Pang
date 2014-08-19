@@ -19,6 +19,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       //initialize Parse
       Parse.initialize(appId, jsKey);
 
+      $rootScope.collections = [];
+
     }, // pang.initialize()
 
  
@@ -35,6 +37,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       //add a new object inheriting from klass with specified attributes
       klass.add = function(attr) {
+        console.log('add object');
+        console.log(attr);
       }
 
       return klass;
@@ -46,31 +50,48 @@ angular.module('pang', []).factory('pang', function($rootScope) {
     *
     * pang.Collection()
     *
-    *  Create a pang Collection which assists in building a Parse
-    *  Collection
+    *  Create a pang Collection which can fetch objects with a Parse
+    *  query and collection.
     *
     *****************************************************************/
     Collection: function(className, promise) {
       var pangCollection = [];
+      $rootScope.collections.push(pangCollection);
       pangCollection.className = className;
       pangCollection.queryMatches = {};
+      pangCollection.autoSync = true; //automagically sync objects by default
 
-      /*--------------------------------------------------------------
-      Methods for modifying what should be included in the collection
-      --------------------------------------------------------------*/
 
-      //include objects which match the specified attributes
+      /***************************************************************
+      *
+      * pangCollection.where()
+      *
+      *  Add the attributes to the list of matchs to add to the query.
+      *
+      ***************************************************************/
       pangCollection.where = function(attr) {
         for(key in attr) {
           pangCollection.queryMatches[key] = attr[key];
         }
 
         return pangCollection;
-      } // collection.where()
+      } // pangCollection.where()
 
       //only iterate over objects which pass through the filter
       //collection.filter = function(
 
+      //sort the objects in the order
+      //pangCollection.order = function() {
+
+
+      /***************************************************************
+      *
+      * pangCollection.build()
+      *
+      *  Build the collection with a query which implements all the
+      *  specified 'wheres'. Fetch the objects with the query
+      *
+      ***************************************************************/
       pangCollection.build = function() {
 
         //create a new query for the collection
@@ -84,9 +105,28 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
         //create a Parse collection and fetch
         var CollectionClass = Parse.Collection.extend({model: pangCollection.className, query: query});
-        var collection = new CollectionClass();
-        collection.fetch({
+        pangCollection.collection = new CollectionClass();
+        pangCollection.fetch();
+
+        return pangCollection;
+      } // pangCollection.build()
+
+
+      /***************************************************************
+      *
+      * pangCollection.fetch()
+      *
+      *  Fetch all the objects with the query
+      *
+      ***************************************************************/
+      pangCollection.fetch = function() {
+        pangCollection.collection.fetch({
           success: function(coll) {
+
+            //empty the array of objects
+            for(var i = 0; i < pangCollection.length; i++) {
+              pangCollection[i] = null;
+            }
 
             //convert the results to an array of objects with attributes
             for(var i = 0; i < coll.length; i++) {
@@ -94,6 +134,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
               for(attrKey in coll.at(i).attributes) {
                 object[attrKey] = coll.at(i).get(attrKey);
               }
+              object.parseObjectId = coll.at(i).id;
               pangCollection[i] = object;
             }
 
@@ -101,9 +142,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
             $rootScope.$apply();
           }
         });
-        
-        return pangCollection;
-      } // collection.build()
+      } // pangCollection.build()
         
 
 
@@ -128,23 +167,52 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       // } // collection.sync()
       // 
 
-      // /*--------------------------------------------------------------
-      // Methods which deal with auto sync capabilities
-      // --------------------------------------------------------------*/
 
-      // //set whether to auto sync or not with Parse
-      // //can also be set manually with collection.autoSync
-      // collection.setAutoSync = function(val) {
-      //   collection.autoSync = (val == null : true ? val);
+      /***************************************************************
+      *
+      * $watch the collection for auto synchronization
+      *
+      ***************************************************************/
+      $rootScope.$watch('collections[collections.length-1]', function(newValue, oldValue) {
+        if(pangCollection.autoSync) {
 
-      // } // collection.setAutoSync()
+          //object added
+          if(newValue.length > oldValue.length) {
 
-      //$rootscope.$watch('colleciton
+            //find the objects which have not been added to Parse yet and add them
+            for(var i = 0; i < pangCollection.length; i++) {
+              if(pangCollection[i].parseObjectId == null) {
+                addParseObject(pangCollection[i]);
+              }
+            }
+
+          //object removed
+          } else if(newValue.length < oldValue.length) {
+
+            //find the objects which were removed and delete them from Parse
+            for(var i = 0; i < oldValue.length; i++) {
+              var obj = oldValue[i];
+              var shouldDelete = true
+              if(obj.parseObjectId == null) continue;
+              for(var j = 0; j < newValue.length; j++) {
+                if(newValue[j].parseObjectId == obj.parseObjectId) {
+                  shouldDelete = false;
+                  continue;
+                }
+              }
+              if(shouldDelete) {
+                deleteParseObject(obj);
+              }
+            }
+          }
+        }
+      }, true);
 
 
       /*--------------------------------------------------------------
       Methods which manage the actual Parse objects
       --------------------------------------------------------------*/
+
 
       /***************************************************************
       *
@@ -153,83 +221,47 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       *  Add a new object to Parse
       *
       ***************************************************************/
-      //var addParseObject = function(object, promise) {
+      var addParseObject = function(object) {
 
-      //  //get the table and create a bare object
-      //  var klass = $rootScope.pangTables[collection.className];
-      //  var parseObject = new klass();
+        //get the table and create a bare object
+        var klass = Parse.Object.extend(pangCollection.className);
+        var parseObject = new klass();
 
-      //  //fill the object will all the correct attributes
-      //  for(attrKey in object) {
-      //    parseObject.set(attrKey, object[attrKey]);
-      //  }
+        //fill the object will all the correct attributes
+        for(attrKey in object) {
+          parseObject.set(attrKey, object[attrKey]);
+        }
 
-      //  //save the new object to Parse
-      //  parseObject.save(null, {
+        //save the new object to Parse
+        parseObject.save(null, {
+          success: function(parseObject) {
+            object.parseObjectId = parseObject.id;
+          }
+        });
 
-      //    //success so call the promise
-      //    success: function(parseObject) {
-      //      object.parseObjectId = parseObject.id;
-      //      if(promise && promise.success) {
-      //        promise.success(parseObject);
-      //      }
-      //    },
-
-      //    //error so call the promise
-      //    error: function(error) {
-      //      if(promise && promise.error) {
-      //        promise.error(error);
-      //      }
-      //    }
-      //  });
-
-      //} // addParseObject()
+      } // addParseObject()
 
 
-      ///***************************************************************
-      //*
-      //* deleteParseObject(object, promise)
-      //*
-      //*  Delete the object in Parse
-      //*
-      //***************************************************************/
-      //var deleteParseObject = function(object, promise) {
+      /***************************************************************
+      *
+      * deleteParseObject(object, promise)
+      *
+      *  Delete the object in Parse
+      *
+      ***************************************************************/
+      var deleteParseObject = function(object) {
 
-      //  //get the object's table and the parseObject
-      //  var table = $rootScope.pangTables[array.className];
-      //  var query = new Parse.Query(table);
-      //  query.get(object.parseObjectId, {
+        //get the object's table and the parseObject
+        var query = new Parse.Query(pangCollection.className);
+        query.get(object.parseObjectId, {
 
-      //    //found the parseObject so try to delete
-      //    success: function(parseObject) {
-      //      parseObject.destroy({
-      //        
-      //        //successfully delete, so call promise
-      //        success: function() {
-      //          if(promise && promise.success) {
-      //            promise.success();
-      //          }
-      //        },
+          //found the parseObject so try to delete
+          success: function(parseObject) {
+            parseObject.destroy();
+          }
+        });
 
-      //        //error deleteing, so call promise
-      //        error: function(error) {
-      //          if(promise && promise.error) {
-      //            promise.error(error);
-      //          }
-      //        }
-      //      });
-      //    },
-
-      //    //could not find parseObject so call promise
-      //    error: function(error) {
-      //      if(promise && promise.error) {
-      //        promise.error(error);
-      //      }
-      //    }
-
-      //  });
-
-      //} // deleteParseObject()
+      } // deleteParseObject()
 
 
       ///***************************************************************

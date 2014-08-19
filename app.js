@@ -15,15 +15,17 @@ var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
   $scope.objects = pang.Collection('Snippet').build();
   //$scope.objects = pang.Collection('Snippet').setAutoSync(true).collect();
 
-  ////delete the object
-	//$scope.deleteObject = function($index) {
-  //  $scope.objects.delete($index);
-	//}
+  //delete the object
+	$scope.deleteObject = function($index) {
+    $scope.objects.splice($index, 1);
+    //$scope.objects.delete($index);
+	}
 
-	////add a new object
-	//$scope.addObject = function() {
-  //  $scope.objects.add({name: $scope.inputText});
- 	//}
+	//add a new object
+	$scope.addObject = function() {
+    $scope.objects.push({name: $scope.inputText});
+    //$scope.objects.add({name: $scope.inputText});
+ 	}
 
 	////update the object
 	//$scope.updateObject = function($index) {
