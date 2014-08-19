@@ -50,10 +50,11 @@ angular.module('pang', []).factory('pang', function($rootScope) {
     Collection: function(className, promise) {
       var pangCollection = [];
       $rootScope.collections.push(pangCollection);
+
       pangCollection.className = className;
       pangCollection.queryMatches = {};
       pangCollection.orders = {};
-      pangCollection.autoSync = true; //automagically sync objects by default
+      pangCollection.autoSync = false; //do not automagically sync objects by default
 
 
       /***************************************************************
@@ -69,9 +70,6 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         }
         return pangCollection;
       } // pangCollection.where()
-
-      //only iterate over objects which pass through the filter
-      //collection.filter = function(
 
 
       /***************************************************************
@@ -172,6 +170,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
             $rootScope.$apply();
           }
         });
+        return pangCollection;
       } // pangCollection.build()
         
 
@@ -212,6 +211,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
           return 0;
         });
+        return pangCollection;
       } // pangCollection.add()
 
 
@@ -226,6 +226,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         var oldObject = pangCollection[index];
         pangCollection.splice(index, 1);
         deleteParseObject(oldObject);
+        return pangCollection;
       } // pangCollection.delete()
 
 
@@ -238,6 +239,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       ***************************************************************/
       pangCollection.update = function(object) {
         updateParseObject(object);
+        return pangCollection;
       } // pangCollection.update()
 
       // //sync all changes to Parse
@@ -295,7 +297,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
             }
           }
         }
-      }, true);
+      }, true); // $rootScope.$watch()
 
 
       /*--------------------------------------------------------------
