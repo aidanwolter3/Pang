@@ -26,10 +26,11 @@ var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
     $scope.objects.add({name: $scope.inputText});
  	}
 
-	////update the object
-	//$scope.updateObject = function($index) {
-  //  var object = $scope.objects[$index];
-  //  object.name = $scope.inputText;
-	//}
+	//update the object
+	$scope.updateObject = function($index) {
+    var object = $scope.objects[$index];
+    object.name = $scope.inputText;
+    $scope.objects.update(object);
+	}
 
 });

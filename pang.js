@@ -157,27 +157,48 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       } // pangCollection.build()
         
 
-
       /*--------------------------------------------------------------
       Methods for manual managment of a collection
       --------------------------------------------------------------*/
 
-      //add a new object inheriting from className with specified attributes
+
+      /***************************************************************
+      *
+      * pangCollection.add()
+      *
+      *  Manually add a new object to the array and Parse.
+      *
+      ***************************************************************/
       pangCollection.add = function(attr) {
         pangCollection.push(attr);
         addParseObject(pangCollection[pangCollection.length-1]);
-      } // collection.add()
+      } // pangCollection.add()
 
-      //delete an object from the collection and Parse
+
+      /***************************************************************
+      *
+      * pangCollection.delete()
+      *
+      *  Manually delete an object from the array and Parse.
+      *
+      ***************************************************************/
       pangCollection.delete = function(index) {
         var oldObject = pangCollection[index];
         pangCollection.splice(index, 1);
         deleteParseObject(oldObject);
-      } // collection.delete()
+      } // pangCollection.delete()
 
-      // //update the attributes in the object
-      // collection.update = function(object) {
-      // } // collection.update()
+
+      /***************************************************************
+      *
+      * pangCollection.update()
+      *
+      *  Update the attributes of the object in Parse.
+      *
+      ***************************************************************/
+      pangCollection.update = function(object) {
+        updateParseObject(object);
+      } // pangCollection.update()
 
       // //sync all changes to Parse
       // collection.sync = function() {
@@ -233,7 +254,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       /***************************************************************
       *
-      * addParseObject(object, promise)
+      * addParseObject()
       *
       *  Add a new object to Parse
       *
@@ -261,7 +282,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       /***************************************************************
       *
-      * deleteParseObject(object, promise)
+      * deleteParseObject()
       *
       *  Delete the object in Parse
       *
@@ -269,7 +290,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       var deleteParseObject = function(object) {
 
         //get the object's table and the parseObject
-        var query = new Parse.Query(pangCollection.className);
+        var klass = Parse.Object.extend(pangCollection.className);
+        var query = new Parse.Query(klass);
         query.get(object.parseObjectId, {
 
           //found the parseObject so try to delete
@@ -281,58 +303,36 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       } // deleteParseObject()
 
 
-      ///***************************************************************
-      //*
-      //* updateParseObject(object, promise)
-      //*
-      //*  Update Parse with the current data in the object
-      //*
-      //***************************************************************/
-      //var updateParseObject = function(object, promise) {
+      /***************************************************************
+      *
+      * updateParseObject()
+      *
+      *  Update Parse with the current data in the object
+      *
+      ***************************************************************/
+      var updateParseObject = function(object, promise) {
 
-      //  //get the table and the Parse object
-      //  var table = $rootScope.pangTables[array.className];
-      //  var query = new Parse.Query(table);
-      //  query.get(object.parseObjectId, {
+        //get the table and the Parse object
+        var klass = Parse.Object.extend(pangCollection.className);
+        var query = new Parse.Query(klass);
+        query.get(object.parseObjectId, {
 
-      //    //found the parseObject so try to delete
-      //    success: function(parseObject) {
+          //found the parseObject so try to update
+          success: function(parseObject) {
 
-      //      //fill the object will all the correct attributes
-      //      for(attrKey in object) {
-      //        if(parseObject.get(attrKey)) {
-      //          parseObject.set(attrKey, object[attrKey]);
-      //        }
-      //      }
+            //fill the object will all the correct attributes
+            for(attrKey in object) {
+              if(parseObject.get(attrKey)) {
+                parseObject.set(attrKey, object[attrKey]);
+              }
+            }
 
-      //      //save the new object to Parse
-      //      parseObject.save(null, {
+            //save the new object to Parse
+            parseObject.save();
+          }
+        });
 
-      //        //success so call the promise
-      //        success: function(parseObject) {
-      //          if(promise && promise.success) {
-      //            promise.success(parseObject);
-      //          }
-      //        },
-
-      //        //error so call the promise
-      //        error: function(error) {
-      //          if(promise && promise.error) {
-      //            promise.error(error);
-      //          }
-      //        }
-      //      });
-      //    },
-
-      //    //could not find parseObject so call promise
-      //    error: function(error) {
-      //      if(promise && promise.error) {
-      //        promise.error(error);
-      //      }
-      //    }
-      //  });
-
-      //} // updateParseObject()
+      } // updateParseObject()
 
       return pangCollection;
 
