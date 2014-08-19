@@ -1,11 +1,6 @@
 angular.module('pang', []).factory('pang', function($rootScope) {
   return {
 
-    /*----------------------------------------------------------------
-    Private variables
-    ----------------------------------------------------------------*/
-    classes: [],
-
 
     /*****************************************************************
     *
@@ -24,26 +19,24 @@ angular.module('pang', []).factory('pang', function($rootScope) {
     }, // pang.initialize()
 
  
-    /*****************************************************************
-    *
-    * pang.Class()
-    *
-    *  Create a pang Class
-    *
-    *****************************************************************/
-    Class: function(className) {
-      var klass = Parse.Object.extend(className);
-      klass.name = className;
+    // /*****************************************************************
+    // *
+    // * pang.Class()
+    // *
+    // *  Create a pang Class
+    // *
+    // *****************************************************************/
+    // Class: function(className) {
+    //   var klass = Parse.Object.extend(className);
+    //   klass.name = className;
 
-      //add a new object inheriting from klass with specified attributes
-      klass.add = function(attr) {
-        console.log('add object');
-        console.log(attr);
-      }
+    //   //add a new object inheriting from klass with specified attributes
+    //   klass.add = function(attr) {
+    //   }
 
-      return klass;
+    //   return klass;
 
-    }, // pang.Class()
+    // }, // pang.Class()
 
 
     /*****************************************************************
@@ -59,6 +52,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       $rootScope.collections.push(pangCollection);
       pangCollection.className = className;
       pangCollection.queryMatches = {};
+      pangCollection.orders = {};
       pangCollection.autoSync = true; //automagically sync objects by default
 
 
@@ -73,15 +67,25 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         for(key in attr) {
           pangCollection.queryMatches[key] = attr[key];
         }
-
         return pangCollection;
       } // pangCollection.where()
 
       //only iterate over objects which pass through the filter
       //collection.filter = function(
 
-      //sort the objects in the order
-      //pangCollection.order = function() {
+
+      /***************************************************************
+      *
+      * pangCollection.order()
+      *
+      *  Add a sorting key and direction to the query
+      *
+      ***************************************************************/
+      pangCollection.order = function(key, direction) {
+        pangCollection.orders[key] = direction != null ? direction : true;
+        return pangCollection;
+      }
+
 
       /***************************************************************
       *
@@ -107,17 +111,31 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       pangCollection.build = function() {
 
         //create a new query for the collection
-        var Klass = Parse.Object.extend(pangCollection.className);
-        var query = new Parse.Query(Klass);
+        var query = new Parse.Query(pangCollection.className);
 
         //add all the needed matches to the query
         for(match in pangCollection.queryMatches) {
           query.equalTo(match, pangCollection.queryMatches[match]);
         }
 
+        //add sorting to the query which has been specified by the user with 'order'
+        for(key in pangCollection.orders) {
+
+          //ascending
+          if(pangCollection.orders[key] == true) {
+            query.addAscending(key);
+
+          //descending
+          } else {
+            query.addDescending(key);
+          }
+        }
+
         //create a Parse collection and fetch
         var CollectionClass = Parse.Collection.extend({model: pangCollection.className, query: query});
         pangCollection.collection = new CollectionClass();
+
+        //fetch the objects
         pangCollection.fetch();
 
         return pangCollection;
@@ -289,9 +307,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       ***************************************************************/
       var deleteParseObject = function(object) {
 
-        //get the object's table and the parseObject
-        var klass = Parse.Object.extend(pangCollection.className);
-        var query = new Parse.Query(klass);
+        //get the parseObject
+        var query = new Parse.Query(pangCollection.className);
         query.get(object.parseObjectId, {
 
           //found the parseObject so try to delete
@@ -310,11 +327,10 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       *  Update Parse with the current data in the object
       *
       ***************************************************************/
-      var updateParseObject = function(object, promise) {
+      var updateParseObject = function(object) {
 
-        //get the table and the Parse object
-        var klass = Parse.Object.extend(pangCollection.className);
-        var query = new Parse.Query(klass);
+        //get the Parse object
+        var query = new Parse.Query(pangCollection.className);
         query.get(object.parseObjectId, {
 
           //found the parseObject so try to update
@@ -334,8 +350,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       } // updateParseObject()
 
-      return pangCollection;
 
+      return pangCollection;
     } // pang.Collection()
 
 
