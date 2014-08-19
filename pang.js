@@ -83,6 +83,18 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       //sort the objects in the order
       //pangCollection.order = function() {
 
+      /***************************************************************
+      *
+      * pangCollection.setAutoSync()
+      *
+      *  Sets whether the sync mode should be auto or manual
+      *
+      ***************************************************************/
+      pangCollection.setAutoSync = function(val) {
+        pangCollection.autoSync = val;
+        return pangCollection;
+      }
+
 
       /***************************************************************
       *
@@ -150,13 +162,18 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       Methods for manual managment of a collection
       --------------------------------------------------------------*/
 
-      // //add a new object inheriting from className with specified attributes
-      // collection.add = function(attr) {
-      // } // collection.add()
+      //add a new object inheriting from className with specified attributes
+      pangCollection.add = function(attr) {
+        pangCollection.push(attr);
+        addParseObject(pangCollection[pangCollection.length-1]);
+      } // collection.add()
 
-      // //delete an object from the collection and Parse
-      // collection.delete = function(object) {
-      // } // collection.delete()
+      //delete an object from the collection and Parse
+      pangCollection.delete = function(index) {
+        var oldObject = pangCollection[index];
+        pangCollection.splice(index, 1);
+        deleteParseObject(oldObject);
+      } // collection.delete()
 
       // //update the attributes in the object
       // collection.update = function(object) {
@@ -170,7 +187,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       /***************************************************************
       *
-      * $watch the collection for auto synchronization
+      * $watch the collection to auto synchronize
       *
       ***************************************************************/
       $rootScope.$watch('collections[collections.length-1]', function(newValue, oldValue) {
