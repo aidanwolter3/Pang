@@ -188,8 +188,30 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       *
       ***************************************************************/
       pangCollection.add = function(attr) {
+        
         pangCollection.push(attr);
         addParseObject(pangCollection[pangCollection.length-1]);
+
+        //order the array now that a new item has been added
+        pangCollection.sort(function(a, b) {
+
+          //loop through every order until keys are different and can be compared
+          for(key in pangCollection.orders) {
+            if(a[key] != b[key]) {
+
+              //ascending
+              if(pangCollection.orders[key] == true) {
+                return b[key] > a[key] ? -1 : 1;
+              
+              //descending
+              } else {
+                return b[key] > a[key] ? 1 : -1;
+              }
+            }
+          }
+
+          return 0;
+        });
       } // pangCollection.add()
 
 
