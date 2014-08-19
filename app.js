@@ -11,15 +11,18 @@ var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
 	//initialize the Pang Object
   pang.initialize('GqBCNGLwUKpoq8CW3zhV8Q2bDovMsHsPPUaYYW8F','19QUZxLzX8bZSZ4IGpOkfSWvQUGdnU38e4Dih5Pm');
 
+  //pang.user().logIn('testusername', '13661');
+  //console.log(pang.user().get('username') + ' logged in');
+
   //create the snippet table and populate
   $scope.objects = pang.Collection('Snippet').order('name').build();
 
 
   //delete the object
-	$scope.deleteObject = function($index) {
-    //$scope.objects.splice($index, 1);
-    $scope.objects.delete($index);
-	}
+	//$scope.deleteObject = function($index) {
+  //  //$scope.objects.splice($index, 1);
+  //  $scope.objects.delete($index);
+	//}
 
 	//add a new object
 	$scope.addObject = function() {
@@ -27,11 +30,11 @@ var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
     $scope.objects.add({name: $scope.inputText});
  	}
 
-	//update the object
-	$scope.updateObject = function($index) {
-    var object = $scope.objects[$index];
-    object.name = $scope.inputText;
-    $scope.objects.update(object);
-	}
+	////update the object
+	//$scope.updateObject = function($index) {
+  //  var object = $scope.objects[$index];
+  //  object.name = $scope.inputText;
+  //  $scope.objects.update(object);
+	//}
 
 });

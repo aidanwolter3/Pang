@@ -1,4 +1,19 @@
 angular.module('pang', []).factory('pang', function($rootScope) {
+
+
+  /***************************************************************
+  *
+  * recollect()
+  *
+  *  Run 'fetch' for all the collections.
+  *
+  ***************************************************************/
+  var recollect = function() {
+    for(var i = 0; i < $rootScope.collections.length; i++) {
+      $rootScope.collections[i].fetch();
+    }
+  } // recollect()
+
   return {
 
 
@@ -17,6 +32,46 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       $rootScope.collections = [];
 
     }, // pang.initialize()
+
+
+    /*****************************************************************
+    *
+    * pang.user()
+    *
+    *  Return the current user if available
+    *
+    *****************************************************************/
+    user: function() {
+      var parseUser = Parse.User.current();
+      if(parseUser == null) {
+        return {
+          username: null,
+          id: null,
+          logOut: function() {
+           console.log('Can not log the user out because there is no user logged in!');
+          },
+          logIn: function(username, password) {
+            Parse.User.logIn(username, password, {
+              success: function(user) {recollect()}
+            });
+          }
+        }
+      }
+      return {
+        username: parseUser.get('username'),
+        id: parseUser.get('id'),
+        logOut: function() {
+          Parse.User.logOut({
+            success: function() {recollect()}
+          });
+        },
+        logIn: function(username, password) {
+          Parse.User.logIn(username, password, {
+            success: function(user) {recollect()}
+          });
+        }
+      }
+    },
 
  
     // /*****************************************************************
@@ -321,6 +376,11 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         //fill the object will all the correct attributes
         for(attrKey in object) {
           parseObject.set(attrKey, object[attrKey]);
+        }
+
+        //add the ACL if a current user exists
+        if(Parse.User.current()) {
+          parseObject.setACL(new Parse.ACL(Parse.User.current()));
         }
 
         //save the new object to Parse
