@@ -1,22 +1,42 @@
 # Pang
-Improves the [Parse.com](http://www.parse.com) javascript library for automatic data synchronization with [AngularJS](http://www.angularjs.org) applications.
+Improves the [Parse.com](http://www.parse.com) javascript library for automatic data synchronization with [AngularJS](http://www.angularjs.org) applications. Similar to how `ng-model` works, Pang will do the heavylifting of updating the database. All you need to worry about is keeping the front-end data on track.
 
 [Demo](http://aidanwolter3.github.com/Pang)
 
 ##Installation
-Include the Pang module in your html
+Include the Pang module in your html.
 ``` html
 <script src="pang.js"></script>
 ```
 
-Inject the Pang module as a dependency
+Inject the Pang module as a dependency.
 ``` javascript
 angular.module('myApp', ['pang'])
 .controller('PangTestCtrl', function($scope, pang) {
 ```
 
+##Quick Example
+Yes, it's this easy.
+``` javascript
+angular.module('myApp', ['pang'])
+.controller('TodoCtrl', function($scope, pang) {
+
+  //setup
+  pang.initialize('abcdef...', '123456...');    // initialize Parse and Pang
+  $scope.todos = pang.Collection('Todo')        // get Todo objects
+                     .order('updatedAt')        // sort most up-to-date on top
+                     .where('completed', false) // only include not completed todos
+                     .build();                  // build collection and fetch objects
+  $scope.autoSync = true;                       // automatically sync all objects with Parse.com
+  
+  //add some todos
+  $scope.todos.push({name: 'Install Pang'});
+  $scope.todos.push({name: 'Do whatever you want'});
+});
+```
+
 ##Usage
-First, initialize Parse and Pang at the same time
+First, initialize Parse and Pang at the same time.
 ``` javascript
 pang.initialize(appId, jsKey);
 ```
