@@ -1,6 +1,8 @@
 # Pang
 Improves the [Parse.com](http://www.parse.com) javascript library for automatic data synchronization with [AngularJS](http://www.angularjs.org) applications.
 
+[Demo](http://aidanwolter3.github.com/pang)
+
 ##Installation
 Include the Pang module in your html
 ``` html

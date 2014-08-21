@@ -23,11 +23,11 @@
 <body ng-controller="PangTestCtrl">
 	<h1>Tests for Pangular</h1>
   <div ng-hide="loggedIn">
-    <p>No one logged in - read access only</p>
+    <p>No one logged in</p>
     <button class="btn" ng-click="login()">Login testusername</button>
   </div>
   <div ng-show="loggedIn"> 
-    <p>testusername logged in - read/write access</p>
+    <p>testusername logged in</p>
     <button class="btn" ng-click="logout()">Logout testusername</button>
   </div>
   <hr>
