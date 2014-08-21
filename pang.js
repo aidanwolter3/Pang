@@ -284,53 +284,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       pangCollection.autoSync = false; //do not automagically sync objects by default
 
 
-      // /*****************************************************************
-      // *
-      // * pangCollection.canWrite()
-      // *
-      // *  Returns whether the current user can write to the object
-      // *
-      // *****************************************************************/
-      // pangCollection.canWrite = function(object, promise) {
-
-      //   //get the parseObject
-      //   var query = new Parse.Query(pangCollection.className);
-      //   query.get(object.parseObjectId, {
-
-      //     //found the parseObject so determine if current user can write to it
-      //     success: function(parseObject) {
-      //       var currentUser = Parse.User.current();
-
-      //       //first check for public write access
-      //       var publicAcl = parseObject.getACL().permissionsById['*'];
-      //       if(publicAcl && publicAcl.write == true) {
-      //         if(promise && promise.yes) {
-      //           promise.yes();
-      //           return;
-      //         }
-      //       }
-
-      //       //if no public write access and no current user, return false
-      //       if(currentUser == null) {
-      //         promise.no();
-      //         return;
-      //       }
-
-      //       //if user logged in, check for write access
-      //       var userAcl = parseObject.getACL().permissionsById[''+currentUser.id];
-      //       if(userAcl && userAcl.write == true) {
-      //         if(promise && promise.yes) {
-      //           promise.yes();
-      //         }
-      //       } else if(promise && promise.no) {
-      //         promise.no();
-      //       }
-      //     }
-      //   });
-      // } // pangCollection.canWrite()
-
-
-      /***************************************************************
+     /***************************************************************
       *
       * pangCollection.where()
       *
