@@ -24,10 +24,11 @@ angular.module('myApp', ['pang'])
   //setup
   pang.initialize('abcdef...', '123456...');    // initialize Parse and Pang
   $scope.todos = pang.Collection('Todo')        // get Todo objects
-                     .order('updatedAt')        // sort most up-to-date on top
+                     .order('updatedAt')        // sort newest on bottom
                      .where('completed', false) // only include not completed todos
                      .build();                  // build collection and fetch objects
-  $scope.autoSync = true;                       // automatically sync all objects with Parse.com
+  $scope.autoSync = true;                       // automatically sync all objects
+                                                // with Parse.com
   
   //add some todos
   $scope.todos.push({name: 'Install Pang'});
@@ -45,7 +46,7 @@ Next, build a new Collection with a Parse table.
 ``` javascript
 $scope.objects = pang.Collection(ParseTable).build();
 ```
-The array `objects` will synchronize with Parse.com when you use these methods
+The array `objects` will synchronize with Parse.com when you use these methods:
 ``` javascript
 //add a new object
 $scope.objects.add({name: 'Object Name'});
@@ -57,12 +58,12 @@ $scope.objects.delete(index);
 $scope.objects.update(object);
 ```
 
-If you would only like to fetch objects with a certain condition
+If you would only like to fetch objects with a certain condition, use `where`.
 ``` javascript
 $scope.objects = pang.Collection(ParseTable).where('isAwesome', true).build();
 ```
 
-Or even sort the objects
+Sort the objects with `order`.
 ``` javascript
 //ascending
 $scope.objects = pang.Collection(ParseTable).order('updatedAt').build();
@@ -72,12 +73,12 @@ $scope.objects = pang.Collection(ParseTable).order('updatedAt', false).build();
 ```
 
 ##Auto Syncing
-Pang has the capability to detect changes in the collection and automatically update them
+Pang has the capability to detect changes in the collection and automatically update them.
 ``` javascript
 $scope.objects = pang.Collection(ParseTable).setAutoSync(true).build();
 ```
 
-Use can then use any methods you'd like to change the contents of the collection
+Use can then use any methods you'd like to change the contents of the collection.
 ``` javascript
 $scope.objects.push({name: 'New Name'});
 $scope.objects.splice(index, 2)
@@ -85,24 +86,24 @@ $scope.objects[index].name = 'This is a new name';
 ```
 
 **Note that a request to Parse will be sent on every single change.**
-*I would recommend not directly using ng-model with object attributes when using AutoSync*
+*I would recommend not directly using ng-model with object attributes when using AutoSync.*
 
 
 ##Permissions
-By default Pang will not add an ACL to the objects. You can do this by passing in another argument to the `add` method
+By default Pang will not add an ACL to the objects. You can do this by passing in another argument to the `add` method.
 ``` javascript
 var newAcl = new Parse.ACL(Parse.User.current());
 newAcl.setPublicReadAccess(true);
 $scope.objects.add({name: 'New Name'}, {acl: newAcl});
 ```
 
-Determine if the current user has `write` permissions with
+Determine if the current user has `write` permissions with `canWrite`.
 ``` javascript
 $scope.objects[index].canWrite
 ```
 
 ##Changing Users
-Use `pang.User.logIn()` and `pang.User.logOut()` instead of the Parse functions to also update the collections. (if a user logs out, then the private objects will be removed from the collection)
+Use `pang.User.logIn()` and `pang.User.logOut()` instead of the Parse functions to also update the collections. (if a user logs out, then the private objects will be removed from the collection).
 ``` javascript
 pang.User.logIn(username, password);
 pang.User.logOut();
@@ -115,6 +116,7 @@ Here are some things which are used by Pang, but you will probably never use. Th
 * Every object in the collection has a `parseObjectId` which can be used to find the corresponding Parse Object.
 * `$scope.object.fetch()` can be used to recollect all the objects.
 * `$scope.objects.autoSync` can be changed after calling build if needed.
+* `$scope.objects.reorder()` will sort the objects again.
 
 
 ##Suggestions?
