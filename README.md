@@ -34,7 +34,7 @@ $scope.objects.add({name: 'Object Name'});
 $scope.objects.delete(index);
 
 //update an existing object
-$scope.objects.update(index);
+$scope.objects.update(object);
 ```
 
 If you would only like to fetch objects with a certain condition
