@@ -19,7 +19,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
   *  Add a new object to Parse
   *
   *******************************************************************/
-  var addParseObject = function(object, className, acl) {
+  var addParseObject = function(object, className, options) {
 
     //get the table and create a bare object
     var klass = Parse.Object.extend(className);
@@ -31,8 +31,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
     }
 
     //add the ACL if a current user exists
-    if(acl != null) {
-      parseObject.setACL(acl);
+    if(options && options.acl != null) {
+      parseObject.setACL(options.acl);
     }
 
     //save the new object to Parse
@@ -42,18 +42,36 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
         //get the write permissions
         acl = parseObject.getACL();
-        userPermissions = null;
-        if(Parse.User.current()) {
-          userPermissions = acl.permissionsById[Parse.User.current().id];
+        if(acl != null) {
+          userPermissions = null;
+          if(Parse.User.current()) {
+            userPermissions = acl.permissionsById[Parse.User.current().id];
+          }
+          publicPermissions = acl.permissionsById['*'];
+          object.canWrite = (userPermissions
+                            && userPermissions.write == true)
+                          || (publicPermissions
+                            && publicPermissions.write == true);
+
+        //no ACL so everyone has complete permissions
+        } else {
+          object.canWrite = true;
         }
-        publicPermissions = acl.permissionsById['*'];
-        object.canWrite = (userPermissions
-                          && userPermissions.write == true)
-                        || (publicPermissions
-                          && publicPermissions.write == true);
-        $rootScope.$apply();
 
+        //add the updatedAt key
+        object.updatedAt = parseObject.updatedAt.toISOString();
 
+        //call the promise
+        if(options && options.success) {
+          options.success(parseObject);
+        }
+      },
+
+      //error saving the object
+      error: function(error) {
+        if(option && options.error) {
+          options.error(error);
+        }
       }
     });
 
@@ -67,7 +85,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
   *  Delete the object in Parse
   *
   *******************************************************************/
-  var deleteParseObject = function(object, className) {
+  var deleteParseObject = function(object, className, options) {
 
     //get the parseObject
     var query = new Parse.Query(className);
@@ -75,7 +93,23 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       //found the parseObject so try to delete
       success: function(parseObject) {
-        parseObject.destroy();
+        parseObject.destroy({
+          success: function() {
+            if(options && options.success) {
+              options.success(parseObject);
+            }
+          },
+          error: function(error) {
+            if(option && options.error) {
+              options.error(error);
+            }
+          }
+        });
+      },
+      error: function(error) {
+        if(option && options.error) {
+          options.error(error);
+        }
       }
     });
 
@@ -89,7 +123,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
   *  Update Parse with the current data in the object
   *
   *******************************************************************/
-  var updateParseObject = function(object, className) {
+  var updateParseObject = function(object, className, options) {
 
     //get the Parse object
     var query = new Parse.Query(className);
@@ -106,8 +140,33 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         }
 
         //save the new object to Parse
-        parseObject.save();
-      }
+        parseObject.save({
+          success: function(parseObject) {
+
+            //update the updatedAt key
+            object.updatedAt = parseObject.updatedAt.toISOString();
+
+            //call the promise
+            if(options && options.success) {
+              options.success(parseObject);
+            }
+          },
+
+          //error saving the object
+          error: function(error) {
+            if(options && options.error) {
+              options.error(error);
+            }
+          }
+        });
+     },
+
+     //error finding the parse object
+     error: function(error) {
+       if(options && options.error) {
+         options.error(error);
+       }
+     }
     });
 
   } // updateParseObject()
@@ -225,50 +284,50 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       pangCollection.autoSync = false; //do not automagically sync objects by default
 
 
-      /*****************************************************************
-      *
-      * pangCollection.canWrite()
-      *
-      *  Returns whether the current user can write to the object
-      *
-      *****************************************************************/
-      pangCollection.canWrite = function(object, promise) {
+      // /*****************************************************************
+      // *
+      // * pangCollection.canWrite()
+      // *
+      // *  Returns whether the current user can write to the object
+      // *
+      // *****************************************************************/
+      // pangCollection.canWrite = function(object, promise) {
 
-        //get the parseObject
-        var query = new Parse.Query(pangCollection.className);
-        query.get(object.parseObjectId, {
+      //   //get the parseObject
+      //   var query = new Parse.Query(pangCollection.className);
+      //   query.get(object.parseObjectId, {
 
-          //found the parseObject so determine if current user can write to it
-          success: function(parseObject) {
-            var currentUser = Parse.User.current();
+      //     //found the parseObject so determine if current user can write to it
+      //     success: function(parseObject) {
+      //       var currentUser = Parse.User.current();
 
-            //first check for public write access
-            var publicAcl = parseObject.getACL().permissionsById['*'];
-            if(publicAcl && publicAcl.write == true) {
-              if(promise && promise.yes) {
-                promise.yes();
-                return;
-              }
-            }
+      //       //first check for public write access
+      //       var publicAcl = parseObject.getACL().permissionsById['*'];
+      //       if(publicAcl && publicAcl.write == true) {
+      //         if(promise && promise.yes) {
+      //           promise.yes();
+      //           return;
+      //         }
+      //       }
 
-            //if no public write access and no current user, return false
-            if(currentUser == null) {
-              promise.no();
-              return;
-            }
+      //       //if no public write access and no current user, return false
+      //       if(currentUser == null) {
+      //         promise.no();
+      //         return;
+      //       }
 
-            //if user logged in, check for write access
-            var userAcl = parseObject.getACL().permissionsById[''+currentUser.id];
-            if(userAcl && userAcl.write == true) {
-              if(promise && promise.yes) {
-                promise.yes();
-              }
-            } else if(promise && promise.no) {
-              promise.no();
-            }
-          }
-        });
-      } // pangCollection.canWrite()
+      //       //if user logged in, check for write access
+      //       var userAcl = parseObject.getACL().permissionsById[''+currentUser.id];
+      //       if(userAcl && userAcl.write == true) {
+      //         if(promise && promise.yes) {
+      //           promise.yes();
+      //         }
+      //       } else if(promise && promise.no) {
+      //         promise.no();
+      //       }
+      //     }
+      //   });
+      // } // pangCollection.canWrite()
 
 
       /***************************************************************
@@ -320,7 +379,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       *  specified 'wheres'. Fetch the objects with the query
       *
       ***************************************************************/
-      pangCollection.build = function() {
+      pangCollection.build = function(promise) {
 
         //create a new query for the collection
         var query = new Parse.Query(pangCollection.className);
@@ -348,7 +407,18 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         pangCollection.collection = new CollectionClass();
 
         //fetch the objects
-        pangCollection.fetch();
+        pangCollection.fetch({
+          success: function(objects) {
+            if(promise && promise.success) {
+              promise.success(objects);
+            }
+          },
+          error: function(error) {
+            if(promise && promise.error) {
+              promise.error(error);
+            }
+          }
+        });
 
         return pangCollection;
       } // pangCollection.build()
@@ -381,15 +451,22 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
               //get the write permissions
               acl = coll.at(i).getACL();
-              userPermissions = null;
-              if(Parse.User.current()) {
-                userPermissions = acl.permissionsById[Parse.User.current().id];
+              if(acl != null) {
+                userPermissions = null;
+                if(Parse.User.current()) {
+                  userPermissions = acl.permissionsById[Parse.User.current().id];
+                }
+                publicPermissions = acl.permissionsById['*'];
+                object.canWrite = (userPermissions
+                                && userPermissions.write == true)
+                            || (publicPermissions
+                                && publicPermissions.write == true);
+              } else {
+                object.canWrite = true;
               }
-              publicPermissions = acl.permissionsById['*'];
-              object.canWrite = (userPermissions
-                              && userPermissions.write == true)
-                          || (publicPermissions
-                              && publicPermissions.write == true);
+
+              //add the updatedAt key
+              object.updatedAt = coll.at(i).updatedAt.toISOString();
 
               pangCollection[i] = object;
             }
@@ -416,12 +493,75 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       ***************************************************************/
       pangCollection.add = function(attr, options) {
         
-        pangCollection.push(attr);
-        if(options != null && options.acl != null) {
-          addParseObject(pangCollection[pangCollection.length-1], pangCollection.className, options.acl);
-        } else {
-          addParseObject(pangCollection[pangCollection.length-1], pangCollection.className);
+        //create clone of old options with new 'success'
+        newOptions = {};
+        for(key in options) {
+          if(key != 'success') {
+            newOptions[key] = options[key];
+          }
         }
+        newOptions.success = function(object) {
+          pangCollection.reorder();
+          options.success(object);
+        }
+        
+        pangCollection.push(attr);
+        addParseObject(pangCollection[pangCollection.length-1], pangCollection.className, newOptions);
+
+        return pangCollection;
+      } // pangCollection.add()
+
+
+      /***************************************************************
+      *
+      * pangCollection.delete()
+      *
+      *  Manually delete an object from the array and Parse.
+      *
+      ***************************************************************/
+      pangCollection.delete = function(index, options) {
+        var oldObject = pangCollection[index];
+        pangCollection.splice(index, 1);
+        deleteParseObject(oldObject, pangCollection.className, options);
+        return pangCollection;
+      } // pangCollection.delete()
+
+
+      /***************************************************************
+      *
+      * pangCollection.update()
+      *
+      *  Update the attributes of the object in Parse.
+      *
+      ***************************************************************/
+      pangCollection.update = function(object, options) {
+
+        //clone the options but change success
+        newOptions = {};
+        for(key in options) {
+          if(key != 'success') {
+            newOptions[key] = options[key];
+          }
+        }
+        newOptions.success = function(object) {
+          pangCollection.reorder();
+          options.success(object);
+        }
+
+        updateParseObject(object, pangCollection.className, newOptions);
+        return pangCollection;
+      } // pangCollection.update()
+
+
+      /***************************************************************
+      *
+      * pangCollection.reorder()
+      *
+      *  Order the objects again. Executed after every add() and
+      *  update()
+      *
+      ***************************************************************/
+      pangCollection.reorder = function() {
 
         //order the array now that a new item has been added
         pangCollection.sort(function(a, b) {
@@ -429,6 +569,13 @@ angular.module('pang', []).factory('pang', function($rootScope) {
           //loop through every order until keys are different and can be compared
           for(key in pangCollection.orders) {
             if(a[key] != b[key]) {
+
+              //if key does not exist in object always shift down
+              if(a[key] == null) {
+                return -1;
+              } else if(b[key] == null) {
+                return 1;
+              }
 
               //ascending
               if(pangCollection.orders[key] == true) {
@@ -443,43 +590,9 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
           return 0;
         });
-        return pangCollection;
-      } // pangCollection.add()
+      } // pangCollection.reorder()
 
-
-      /***************************************************************
-      *
-      * pangCollection.delete()
-      *
-      *  Manually delete an object from the array and Parse.
-      *
-      ***************************************************************/
-      pangCollection.delete = function(index) {
-        var oldObject = pangCollection[index];
-        pangCollection.splice(index, 1);
-        deleteParseObject(oldObject, pangCollection.className);
-        return pangCollection;
-      } // pangCollection.delete()
-
-
-      /***************************************************************
-      *
-      * pangCollection.update()
-      *
-      *  Update the attributes of the object in Parse.
-      *
-      ***************************************************************/
-      pangCollection.update = function(object) {
-        updateParseObject(object, pangCollection.className);
-        return pangCollection;
-      } // pangCollection.update()
-
-      // //sync all changes to Parse
-      // collection.sync = function() {
-      // } // collection.sync()
-      // 
-
-
+      
       /***************************************************************
       *
       * $watch the collection to auto synchronize
