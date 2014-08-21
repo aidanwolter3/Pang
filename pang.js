@@ -246,26 +246,6 @@ angular.module('pang', []).factory('pang', function($rootScope) {
     }, 
 
  
-    // /*****************************************************************
-    // *
-    // * pang.Class()
-    // *
-    // *  Create a pang Class
-    // *
-    // *****************************************************************/
-    // Class: function(className) {
-    //   var klass = Parse.Object.extend(className);
-    //   klass.name = className;
-
-    //   //add a new object inheriting from klass with specified attributes
-    //   klass.add = function(attr) {
-    //   }
-
-    //   return klass;
-
-    // }, // pang.Class()
-
-
     /*****************************************************************
     *
     * pang.Collection()
@@ -284,7 +264,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       pangCollection.autoSync = false; //do not automagically sync objects by default
 
 
-     /***************************************************************
+      /***************************************************************
       *
       * pangCollection.where()
       *
