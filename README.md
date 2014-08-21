@@ -1,126 +1,99 @@
-# Pangular
-An [AngularJS](http://www.angularjs.org) module which allows for easy synchronization with [Parse.com](http://www.parse.com) applications.
+# Pang
+Improves the [Parse.com](http://www.parse.com) javascript library for automatic data synchronization with [AngularJS](http://www.angularjs.org) applications.
+
+##Installation
+Include the Pang module in your html
+``` html
+<script src="pang.js"></script>
+```
+
+Inject the Pang module as a dependency
+``` javascript
+angular.module('myApp', ['pang'])
+.controller('PangTestCtrl', function($scope, pang) {
+```
 
 ##Usage
-
-Add the Pangular module and your ready to go.
+First, initialize Parse and Pang at the same time
 ``` javascript
-angular.module('myApp', ['pang']);
-
-function ObjectCtrl($scope, PangObject) {
-	//controller implementation
-}
+pang.initialize(appId, jsKey);
 ```
 
-Initialize a new Pang object with a connection to a Parse table
+Next, build a new Collection with a Parse table.
 ``` javascript
-$scope.objects = PangObject.new('ParseTable');
-$scope.objects.initialize();
+$scope.objects = pang.Collection(ParseTable).build();
 ```
-
-Add object
+The array `objects` will synchronize with Parse.com when you use these methods
 ``` javascript
+//add a new object
 $scope.objects.add({name: 'Object Name'});
+
+//delete an object
+$scope.objects.delete(index);
+
+//update an existing object
+$scope.objects.update(index);
 ```
 
-Delete object
+If you would only like to fetch objects with a certain condition
 ``` javascript
-var objectToDelete = $scope.objects.data[0];
-$scope.objects.delete(objectToDelete);
+$scope.objects = pang.Collection(ParseTable).where('isAwesome', true).build();
 ```
 
-Update object
+Or even sort the objects
 ``` javascript
-var objectToUpdate = $scope.objects.data[0];
-objectToUpdate.attribute = value;
-$scope.objects.update(objectToUpdate);
+//ascending
+$scope.objects = pang.Collection(ParseTable).order('updatedAt').build();
+
+//descending
+$scope.objects = pang.Collection(ParseTable).order('updatedAt', false).build();
 ```
 
-Sort the objects
+##Auto Syncing
+Pang has the capability to detect changes in the collection and automatically update them
 ``` javascript
-$scope.objects.sortKey = 'updatedAt';
-
- OR
-
-$scope.objects.sortFunction = function(a, b) {
-	a = a['name'].toLowerCase();
-	b = b['name'].toLowerCase();
-	return a > b ? 1 : -1;
-}
+$scope.objects = pang.Collection(ParseTable).setAutoSync(true).build();
 ```
 
-##Example
-Controller
+Use can then use any methods you'd like to change the contents of the collection
 ``` javascript
-function PangTestCtrl($scope, PangObject) {
-	Parse.initialize('yourAppId','yourJsKey');
-	var numberOfObjects = 0;
-
-	//initialize the PangObject
-	$scope.objects = PangObject.new('ObjectTable');
-	$scope.objects.initialize().then(function() {
-		$scope.$apply();
-		numberOfObjects = $scope.objects.data.length;
-	});
-
-	//delete an object
-	$scope.deleteObject = function(object) {
-		$scope.objects.delete(object);
-		numberOfObjects = numberOfObjects - 1;
-	}
-
-	//add an object
-	$scope.addObject = function() {
-		$scope.objects.add({name: numberOfObjects.toString()});
-		numberOfObjects = numberOfObjects + 1;
-	}
-
-	//update the object
-	$scope.updateObject = function(object) {
-		object.name = $scope.newText;
-		$scope.objects.update(object);
-	}
-}
+$scope.objects.push({name: 'New Name'});
+$scope.objects.splice(index, 2)
+$scope.objects[index].name = 'This is a new name';
 ```
 
-View
-``` html
-<!-- a table which lists all data in the pangObject data array -->
-<table>
-	<tr>
-		<th>Objects:</th>
-	</tr>
-	<tr ng-repeat="object in objects.data">
-		<td>{{object.name}}</td>
-		<td>
-			<button class="btn-small btn-primary"
-			        ng-click="updateObject(object)">update</button>
-			<button class="btn-small btn-danger"
-			        ng-click="deleteObject(object)">delete</button>
-		</td>
-	</tr>
-</table>
+**Note that a request to Parse will be sent on every single change.**
+*I would recommend not directly using ng-model with object attributes when using AutoSync*
 
-<input ng-model="newText" placeholder="update text...">
-<hr>
-<button class="btn" ng-click="addObject()">New Object</button>
-```
 
-##Todo
-**updateAll( )** data to and from Parse.
+##Permissions
+By default Pang will not add an ACL to the objects. You can do this by passing in another argument to the `add` method
 ``` javascript
-$scope.objects.updateAll();
+var newAcl = new Parse.ACL(Parse.User.current());
+newAcl.setPublicReadAccess(true);
+$scope.objects.add({name: 'New Name'}, {acl: newAcl});
 ```
 
-**update( )** data in both directions (to and from Parse).
-Also, using the timestamps, determine whether the local object or the object in Parse
-is the most up-to-date. Update the object in both directions according to the
-most up-to-date data.
+Determine if the current user has `write` permissions with
 ``` javascript
-$scope.objects[0].update();
+$scope.objects[index].canWrite
 ```
 
-##Dependencies
-1. [AngularJS](http://www.angularjs.org)
-2. [JQuery](http://jquery.com)
-3. [Parse](http://www.parse.com) application
+##Changing Users
+Use `pang.User.logIn()` and `pang.User.logOut()` instead of the Parse functions to also update the collections. (if a user logs out, then the private objects will be removed from the collection)
+``` javascript
+pang.User.logIn(username, password);
+pang.User.logOut();
+```
+
+
+##Other
+Here are some things which are used by Pang, but you will probably never use. They are available just in case, though.
+
+* Every object in the collection has a `parseObjectId` which can be used to find the corresponding Parse Object.
+* `$scope.object.fetch()` can be used to recollect all the objects.
+* `$scope.objects.autoSync` can be changed after calling build if needed.
+
+
+##Suggestions?
+Please, let me know!
