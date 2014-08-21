@@ -22,33 +22,41 @@
 
 <body ng-controller="PangTestCtrl">
 	<h1>Tests for Pangular</h1>
+  <div ng-hide="loggedIn">
+    <p>No one logged in - read access only</p>
+    <button class="btn" ng-click="login()">Login testusername</button>
+  </div>
+  <div ng-show="loggedIn"> 
+    <p>testusername logged in - read/write access</p>
+    <button class="btn" ng-click="logout()">Logout testusername</button>
+  </div>
+  <hr>
 	<table>
 		<tr>
-			<th>Up to date?</th>
-			<th>Objects:</th>
+			<th style="text-align: left">Objects:</th>
 		</tr>
 
 		<!-- for every object -->
 		<tr ng-repeat="object in objects">
 
-			<!-- display whether up to date or not -->
-			<td ng-if="upToDate[$index]">&#x2713;</td>
-			<td ng-if="!upToDate[$index]">&#x2717;</td>
-
 			<!-- display the object -->
-			<td style="width: 20em; text-align:center">{{object.name}}</td>
+			<td style="width: 10em">{{object.name}}</td>
 
 			<!-- give some controls -->
 			<td>
-				<button class="btn-small btn-primary" ng-click="updateObject($index)">update</button>
-				<button class="btn-small btn-danger" ng-click="deleteObject($index)">delete</button>
+				<button ng-show="object.canWrite" class="btn-small btn-primary" ng-click="updateObject($index)">update</button>
+				<button ng-show="object.canWrite" class="btn-small btn-danger" ng-click="deleteObject($index)">delete</button>
 			</td>
 			
 		</tr>
 	</table>
 
-	<input ng-model="inputText" placeholder="new / update title...">
-	<hr>
-	<button class="btn" ng-click="addObject()">New Object</button>
+  <input ng-model="inputText" placeholder="new / update title...">
+  <hr>
+  <div ng-show="loggedIn">
+    <button class="btn" ng-click="addObject()">New Object</button>
+    <input ng-model="pubReadChecked" type="checkbox">Public Read</input>
+    <input ng-model="pubWriteChecked" type="checkbox">Public Write</input>
+  </div>
 </body>
 </html>
