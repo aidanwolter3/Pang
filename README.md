@@ -22,13 +22,13 @@ angular.module('myApp', ['pang'])
 .controller('TodoCtrl', function($scope, pang) {
 
   //setup
-  pang.initialize('abcdef...', '123456...');    // initialize Parse and Pang
-  $scope.todos = pang.Collection('Todo')        // get Todo objects
-                     .order('updatedAt')        // sort newest on bottom
-                     .where('completed', false) // only include not completed todos
-                     .build();                  // build collection and fetch objects
-  $scope.autoSync = true;                       // automatically sync all objects
-                                                // with Parse.com
+  pang.initialize('abcdef...', '123456...');      // initialize Parse and Pang
+  $scope.todos = pang.Collection('Todo')          // get Todo objects
+                     .order('updatedAt')          // sort newest on bottom
+                     .where({'completed', false}) // only include not completed todos
+                     .build();                    // build collection and fetch objects
+  $scope.autoSync = true;                         // automatically sync all objects
+                                                  // with Parse.com
   
   //add some todos
   $scope.todos.push({name: 'Install Pang'});
@@ -60,7 +60,7 @@ $scope.objects.update(object);
 
 If you would only like to fetch objects with a certain condition, use `where`.
 ``` javascript
-$scope.objects = pang.Collection(ParseTable).where('isAwesome', true).build();
+$scope.objects = pang.Collection(ParseTable).where({'isAwesome', true}).build();
 ```
 
 Sort the objects with `order`.
