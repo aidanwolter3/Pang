@@ -240,11 +240,8 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         });
       },
       logOut: function() {
-        Parse.User.logOut({
-          success: function() {
-            recollect();
-          }
-        });
+        Parse.User.logOut();
+        recollect();
       }
     }, 
 
