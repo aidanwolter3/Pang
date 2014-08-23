@@ -69,7 +69,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       //error saving the object
       error: function(error) {
-        if(option && options.error) {
+        if(options && options.error) {
           options.error(error);
         }
       }
@@ -100,14 +100,14 @@ angular.module('pang', []).factory('pang', function($rootScope) {
             }
           },
           error: function(error) {
-            if(option && options.error) {
+            if(options && options.error) {
               options.error(error);
             }
           }
         });
       },
       error: function(error) {
-        if(option && options.error) {
+        if(options && options.error) {
           options.error(error);
         }
       }
@@ -240,8 +240,11 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         });
       },
       logOut: function() {
-        Parse.User.logOut();
-        recollect();
+        Parse.User.logOut({
+          success: function() {
+            recollect();
+          }
+        });
       }
     }, 
 
@@ -436,7 +439,10 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         }
         newOptions.success = function(object) {
           pangCollection.reorder();
-          options.success(object);
+          if(options && options.success) {
+            options.success(object);
+          }
+          $rootScope.$apply();
         }
         
         pangCollection.push(attr);
@@ -454,9 +460,25 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       *
       ***************************************************************/
       pangCollection.delete = function(index, options) {
+
+        //clone the options but change success
+        newOptions = {};
+        for(key in options) {
+          if(key != 'success') {
+            newOptions[key] = options[key];
+          }
+        }
+        newOptions.success = function(object) {
+          pangCollection.reorder();
+          if(options && options.success) {
+            options.success(object);
+          }
+          $rootScope.$apply();
+        }
+
         var oldObject = pangCollection[index];
         pangCollection.splice(index, 1);
-        deleteParseObject(oldObject, pangCollection.className, options);
+        deleteParseObject(oldObject, pangCollection.className, newOptions);
         return pangCollection;
       } // pangCollection.delete()
 
@@ -479,7 +501,10 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         }
         newOptions.success = function(object) {
           pangCollection.reorder();
-          options.success(object);
+          if(options && options.success) {
+            options.success(object);
+          }
+          $rootScope.$apply();
         }
 
         updateParseObject(object, pangCollection.className, newOptions);
