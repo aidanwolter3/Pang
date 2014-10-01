@@ -27,7 +27,7 @@ angular.module('myApp', ['pang'])
                      .order('updatedAt')          // sort newest on bottom
                      .where({'completed', false}) // only include not completed todos
                      .build();                    // build collection and fetch objects
-  $scope.autoSync = true;                         // automatically sync all objects
+  $scope.todos.autoSync = true;                         // automatically sync all objects
                                                   // with Parse.com
   
   //add some todos
