@@ -27,7 +27,21 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
     //fill the object will all the correct attributes
     for(attrKey in object) {
-      parseObject.set(attrKey, object[attrKey]);
+
+      //if key is a pointer to another object
+      if(object[attrKey].parseObjectId) {
+        var pangObj = object[attrKey];
+        var parseObj = new Parse.Object(pangObj.className);
+        parseObj.id = pangObj.parseObjectId;
+        for(var newKey in pangObj) {
+          parseObj.newKey = pangObj[newKey];
+        }
+        parseObject.set(attrKey, parseObj);
+
+      //otherwise regular key
+      } else {
+        parseObject.set(attrKey, object[attrKey]);
+      }
     }
 
     //add the ACL if a current user exists
@@ -365,7 +379,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       *  Fetch all the objects with the query
       *
       ***************************************************************/
-      pangCollection.fetch = function() {
+      pangCollection.fetch = function(promise) {
         pangCollection.collection.fetch({
           success: function(coll) {
 
@@ -382,6 +396,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
                 object[attrKey] = coll.at(i).get(attrKey);
               }
               object.parseObjectId = coll.at(i).id;
+              object.className = pangCollection.className;
 
               //get the write permissions
               acl = coll.at(i).getACL();
@@ -407,6 +422,17 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
             //apply the changes
             $rootScope.$apply();
+
+            if(promise && promise.success) {
+              promise.success(coll);
+            }
+          },
+
+          //if ran into error
+          error: function(error) {
+            if(promise && promise.error) {
+              promise.error(error);
+            }
           }
         });
         return pangCollection;
