@@ -26,10 +26,10 @@ angular.module('pang', []).factory('pang', function($rootScope) {
     var parseObject = new klass();
 
     //fill the object will all the correct attributes
-    for(attrKey in object) {
+    for(var attrKey in object) {
 
       //if key is a pointer to another object
-      if(object[attrKey].parseObjectId) {
+      if(object[attrKey] && object[attrKey].parseObjectId) {
         var pangObj = object[attrKey];
         var parseObj = new Parse.Object(pangObj.className);
         parseObj.id = pangObj.parseObjectId;
