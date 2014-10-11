@@ -27,7 +27,6 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
     //fill the object will all the correct attributes
     for(var attrKey in object) {
-
       //if key is a pointer to another object
       if(object[attrKey] && object[attrKey].parseObjectId) {
         var pangObj = object[attrKey];
@@ -37,7 +36,6 @@ angular.module('pang', []).factory('pang', function($rootScope) {
           parseObj.newKey = pangObj[newKey];
         }
         parseObject.set(attrKey, parseObj);
-
       //otherwise regular key
       } else {
         parseObject.set(attrKey, object[attrKey]);
@@ -145,14 +143,25 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       //found the parseObject so try to update
       success: function(parseObject) {
-
         //fill the object will all the correct attributes
         for(attrKey in object) {
-          if(parseObject.get(attrKey)) {
-            parseObject.set(attrKey, object[attrKey]);
-          }
+	      if(object[attrKey] && object[attrKey].parseObjectId) {
+	        var pangObj = object[attrKey];
+	        var parseObj = new Parse.Object(pangObj.className);
+	        parseObj.id = pangObj.parseObjectId;
+	        for(var newKey in pangObj) {
+	          parseObj.newKey = pangObj[newKey];
+	        }
+	          if(parseObject.get(attrKey)) {
+				  parseObject.set(attrKey, parseObj);
+	          }
+	      } else {
+	          if(parseObject.get(attrKey)) {
+	            parseObject.set(attrKey, object[attrKey]);
+	          }
+	      }
         }
-
+        
         //save the new object to Parse
         parseObject.save({
           success: function(parseObject) {
@@ -613,9 +622,7 @@ angular.module('pang', []).factory('pang', function($rootScope) {
             }
 
           //object changed but not added or deleted
-          } else {
-            console.log('changed');
-            
+          } else {           
             //update every object that has changed
             for(var i = 0; i < oldValue.length; i++) {
               if(angular.equals(oldValue[i], newValue[i]) == false) {
