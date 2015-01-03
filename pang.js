@@ -160,7 +160,6 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       success: function(parseObject) {
 
-
         //add the ACL if a current user exists
         if(options && options.acl != null) {
           parseObject.setACL(options.acl);
@@ -548,11 +547,20 @@ angular.module('pang', []).factory('pang', function($rootScope) {
           }
           $rootScope.$apply();
         }
+
+        //add acl to new options if in attr and not autoSyncing
+        if(pangCollection.autoSync == false && attr.ACL != null) {
+          newOptions.acl = attr.ACL;
+          delete attr.ACL;
+        }
         
         pangCollection.push(attr);
         var pangObject = pangCollection[pangCollection.length-1];
         pangObject.className = pangCollection.className;
-        addParseObject(pangObject, newOptions);
+
+        if(pangCollection.autoSync == false) {
+          addParseObject(pangObject, newOptions);
+        }
 
         return pangCollection;
       } // pangCollection.add()
@@ -584,7 +592,11 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
         var oldObject = pangCollection[index];
         pangCollection.splice(index, 1);
-        deleteParseObject(oldObject, pangCollection.className, newOptions);
+
+        if(pangCollection.autoSync == false) {
+          deleteParseObject(oldObject, pangCollection.className, newOptions);
+        }
+        
         return pangCollection;
       } // pangCollection.delete()
 
@@ -671,8 +683,30 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
             //find the objects which have not been added to Parse yet and add them
             for(var i = 0; i < pangCollection.length; i++) {
-              if(pangCollection[i].parseObjectId == null) {
-                addParseObject(pangCollection[i]);
+              
+              var object = pangCollection[i]
+              if(object.parseObjectId == null) {
+
+                //create an acl in the options if necessary
+                var aclOptions = {};
+                if(object.ACL != null) {
+                  aclOptions.acl = object.ACL;
+
+                  //update the canWrite attribute
+                  userPermissions = null;
+                  if(Parse.User.current()) {
+                    userPermissions = aclOptions.acl.permissionsById[Parse.User.current().id];
+                  }
+                  publicPermissions = aclOptions.acl.permissionsById['*'];
+                  object.canWrite = (userPermissions
+                                  && userPermissions.write == true)
+                              || (publicPermissions
+                                  && publicPermissions.write == true);
+                } else {
+                  object.canWrite = true;
+                }
+
+                addParseObject(object, aclOptions);
               }
             }
 

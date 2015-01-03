@@ -8,7 +8,7 @@ var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
   pang.initialize('GqBCNGLwUKpoq8CW3zhV8Q2bDovMsHsPPUaYYW8F','19QUZxLzX8bZSZ4IGpOkfSWvQUGdnU38e4Dih5Pm');
 
   //create the snippet table and populate
-  $scope.objects = pang.Collection('Snippet').order('name').build();
+  $scope.objects = pang.Collection('Snippet').order('name').setAutoSync(false).build();
 
   //handle login/logout info
   $scope.loggedIn = Parse.User.current() ? true : false;
@@ -37,7 +37,7 @@ var pangTest = angular.module('pangTest', ['ngResource', 'pang'])
       var parseACL = new Parse.ACL(Parse.User.current());
       parseACL.setPublicReadAccess($scope.pubReadChecked == true);
       parseACL.setPublicWriteAccess($scope.pubWriteChecked == true);
-      $scope.objects.add({name: $scope.inputText}, {acl: parseACL});
+      $scope.objects.add({name: $scope.inputText, ACL: parseACL});
     } else {
       alert('You do not have permission to write!');
     }
