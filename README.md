@@ -90,11 +90,11 @@ $scope.objects[index].name = 'This is a new name';
 
 
 ##Permissions
-By default Pang will not add an ACL to the objects. You can do this by passing in another argument to the `add` method.
+By default Pang will not add an ACL to the objects. You can do this by passing the ACL as an attribute to the `add` method.
 ``` javascript
 var newAcl = new Parse.ACL(Parse.User.current());
 newAcl.setPublicReadAccess(true);
-$scope.objects.add({name: 'New Name'}, {acl: newAcl});
+$scope.objects.add({name: 'New Name', ACL: newAcl});
 ```
 
 Determine if the current user has `write` permissions with `canWrite`.
