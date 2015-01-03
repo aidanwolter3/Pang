@@ -27,7 +27,7 @@ angular.module('myApp', ['pang'])
                      .order('updatedAt')          // sort newest on bottom
                      .where({'completed', false}) // only include not completed todos
                      .build();                    // build collection and fetch objects
-  $scope.todos.autoSync = true;                         // automatically sync all objects
+  $scope.todos.autoSync = true;                   // automatically sync all objects
                                                   // with Parse.com
   
   //add some todos
@@ -109,6 +109,12 @@ pang.User.logIn(username, password);
 pang.User.logOut();
 ```
 
+##Pointers
+Pang handles pointers in exactly the same way Parse does. Simply add the pointer like another attribute and Pang will figure it out.
+``` javascript
+var modelS = pang.Collection('Model').where({'name', 'model-s'}).build()[0];
+pang.cars.add({name: 'Tesla', model: modelS});
+```
 
 ##Other
 Here are some things which are used by Pang, but you will probably never use. They are available just in case, though.
