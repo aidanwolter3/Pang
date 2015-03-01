@@ -386,6 +386,37 @@ angular.module('pang', []).factory('pang', function($rootScope) {
       pangCollection.orders = {};
       pangCollection.autoSync = false; //do not automagically sync objects by default
 
+      /***************************************************************
+      *
+      * pangCollection.get()
+      *
+      *  Get a specific pang object using a pointer from another
+      *  object.
+      *
+      ***************************************************************/
+      pangCollection.get = function(ptr, promise) {
+
+        //create a new query for the temporary collection
+        var query = new Parse.Query(pangCollection.className);
+
+        query.get(ptr.parseObjectId, {
+
+          //found object
+          success: function(object) {
+            if(promise && promise.success) {
+              promise.success(parse2pangObject(object));
+            }
+          },
+
+          //could not find object
+          error: function(error) {
+            if(promise && promise.error) {
+              promise.error(error);
+            }
+          }
+        });
+      }
+
 
       /***************************************************************
       *

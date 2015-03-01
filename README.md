@@ -116,6 +116,16 @@ var modelS = pang.Collection('Model').where({'name', 'model-s'}).build()[0];
 pang.cars.add({name: 'Tesla', model: modelS});
 ```
 
+Pang can fetch a Parse object from a pointer as well.
+``` javascript
+var tesla = pang.Collection('Car').where({name: 'Tesla'}).build()[0];
+pang.Collection('Model').get(tesla.model, {
+  success: function(object) {
+    $scope.tesla_model = object;
+  }
+});
+```
+
 ##Other
 Here are some things which are used by Pang, but you will probably never use. They are available just in case, though.
 
