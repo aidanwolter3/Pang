@@ -60,7 +60,12 @@ $scope.objects.update(object);
 
 If you would only like to fetch objects with a certain condition, use `where`.
 ``` javascript
-$scope.objects = pang.Collection(ParseTable).where({'isAwesome', true}).build();
+$scope.objects = pang.Collection(ParseTable).where('isAwesome', true).build();
+```
+
+To fetch objects if they exist, use `exist`.
+``` javascript
+$scope.objects = pang.Collection(ParseTable).exists('hasAwesomePower', true).build();
 ```
 
 Sort the objects with `order`.

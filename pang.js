@@ -435,6 +435,19 @@ angular.module('pang', []).factory('pang', function($rootScope) {
 
       /***************************************************************
       *
+      * pangCollection.exists()
+      *
+      *  Add the attributes to the list of matchs to add to the query.
+      *
+      ***************************************************************/
+      pangCollection.exists = function(key, existence) {
+        pangCollection.exists[key] = existence != null ? existence : true;
+        return pangCollection;
+      } // pangCollection.exists()
+
+
+      /***************************************************************
+      *
       * pangCollection.order()
       *
       *  Add a sorting key and direction to the query
@@ -475,6 +488,19 @@ angular.module('pang', []).factory('pang', function($rootScope) {
         //add all the needed matches to the query
         for(match in pangCollection.queryMatches) {
           query.equalTo(match, pangCollection.queryMatches[match]);
+        }
+
+        //add all the needed existences to the query
+        for(key in pangCollection.exists) {
+
+          //ascending
+          if(pangCollection.exists[key] == true) {
+            query.exists(key);
+
+          //descending
+          } else {
+            query.doesNotExist(key);
+          }
         }
 
         //add sorting to the query which has been specified by the user with 'order'
